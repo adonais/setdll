@@ -5,6 +5,7 @@ The [`Detours`](https://github.com/microsoft/detours) repository is where develo
 ## build
 
 nmake clean
+
 nmake
 
 ## License
