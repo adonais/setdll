@@ -23,7 +23,7 @@ CLIB=/MT
 !ENDIF
 
 AFLAGS=/nologo /Zi /c /Fl
-CFLAGS=/nologo /Zi $(CLIB) /Gm- /W4 /WX /Od /utf-8
+CFLAGS=/nologo /Zi $(CLIB) /Gm- /W4 /WX /O1 /utf-8
 
 !IF $(DETOURS_SOURCE_BROWSING)==1
 CFLAGS=$(CFLAGS) /FR
@@ -63,8 +63,8 @@ CFLAGS=$(CFLAGS) /D_$(DETOURS_TARGET_PROCESSOR:X64=AMD64)_ # redundant with wind
 
 !ENDIF
 
-DEPS = $(LIBD)\detours.lib
-LIBS = $(DEPS)
+DEPS = $(LIBD)\detours.lib $(LIBD)\7z.lib
+LIBS = $(LIBD)\detours.lib /WHOLEARCHIVE:$(LIBD)\7z.lib
 
 ##############################################################################
 ##

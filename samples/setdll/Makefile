@@ -31,11 +31,15 @@ dirs:
 
 $(OBJD)\setdll.obj : setdll.cpp
 
+$(OBJD)\7zc.obj : 7zc.cpp
+	cl -DWIN_LONG_PATH -D_7ZIP_LARGE_PAGES -DSUPPORT_DEVICE_FILE -DUNICODE -D_UNICODE -Gr -nologo \
+	-W4 -WX -EHsc -Gy -GR- -GF -MT -GS- -Zc:forScope -Zc:wchar_t -MP2 -D_CONSOLE -O1 /I..\7z /EHsc /Fo$@ /c 7zc.cpp
+	
 $(OBJD)\resource.res : resource.rc
 	rc.exe /nologo /D "_UNICODE" /D "UNICODE" /fo$@ %s
 	
-$(BIND)\setdll$(BITS).exe : $(OBJD)\setdll.obj $(OBJD)\resource.res $(DEPS)
-    cl $(CFLAGS) /Fe$@ /Fd$(@R).pdb $(OBJD)\setdll.obj $(OBJD)\resource.res \
+$(BIND)\setdll$(BITS).exe : $(OBJD)\setdll.obj $(OBJD)\7zc.obj $(OBJD)\resource.res $(DEPS)
+    cl $(CFLAGS) /Fe$@ /Fd$(@R).pdb $(OBJD)\setdll.obj $(OBJD)\7zc.obj $(OBJD)\resource.res \
         /link $(LINKFLAGS) $(LIBS) /subsystem:console
 
 $(OBJD)\setdll.bsc : $(OBJD)\setdll.obj

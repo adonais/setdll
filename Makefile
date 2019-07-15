@@ -12,7 +12,7 @@ ROOT = .
 
 all:
     cd "$(MAKEDIR)"
-	@if exist "$(MAKEDIR)\core\makefile" cd "$(MAKEDIR)\core" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
+	@if exist "$(MAKEDIR)\samples\7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\samples\7z\CPP\7zip\Bundles\Alone" && $(MAKE)
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS)
     cd "$(MAKEDIR)\samples"
