@@ -30,8 +30,6 @@
 #include <strsafe.h>
 #pragma warning(pop)
 
-#define COLUMNS 10
-#define VALUE_LEN 128
 #define BUFFSIZE 1024
 #define LEN_NAME 6
 #define UNUSED(c) (c) = (c)
@@ -537,15 +535,7 @@ Patched_File(LPCWSTR pfile)
     WCHAR aPath[MAX_PATH + 1] = { 0 };
     WCHAR aCmd[MAX_PATH + 1] = { 0 };
     WCHAR temp[LEN_NAME + 1];
-    WCHAR *pg[COLUMNS] = { 0 };
-    WCHAR exec_argv[COLUMNS][VALUE_LEN + 1] = { {
-        0,
-    } };
-    int i = 0;
-    if (!GetModuleFileNameW(NULL, exec_argv[0], VALUE_LEN))
-    {
-        return FALSE;
-    }
+    WCHAR omni[MAX_PATH + 1] = { 0 };
     if (pfile == NULL || pfile[1] != ':')
     {
         return FALSE;
@@ -568,18 +558,14 @@ Patched_File(LPCWSTR pfile)
     {
         return FALSE;
     }
-    _snwprintf_s(aCmd, MAX_PATH, L"-o%s", aPath);
-    _snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"x");
-    _snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-aoa");
-    _snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", aCmd);
-    _snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", pfile);
-    for (i = 0; i < COLUMNS && *exec_argv[i] != 0; i++)
+    _snwprintf_s(aCmd, MAX_PATH, L"x -aoa -o%s %s", aPath, pfile);
+    if (exec_zmain1(aCmd) == -1)
     {
-        pg[i] = exec_argv[i];
-    }
-    exec_zmain(i, pg);
-    _snwprintf_s(aCmd, MAX_PATH, L"%s", pfile);
-    if (!(fnPathRemoveFileSpecW(aCmd) && fnPathAppendW(aCmd, L"omni.zip") && SetCurrentDirectoryW(aPath)))
+        printf("exec_zmain1 failed\n");
+        return FALSE;
+    }        
+    _snwprintf_s(omni, MAX_PATH, L"%s", pfile);
+    if (!(fnPathRemoveFileSpecW(omni) && fnPathAppendW(omni, L"omni.zip") && SetCurrentDirectoryW(aPath)))
     {
         printf("SetCurrentDirectory failed\n");
         return FALSE;
@@ -589,23 +575,14 @@ Patched_File(LPCWSTR pfile)
         printf("edit_files failed\n");
         return FALSE;
     }
-    _snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"a");
-    _snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-tzip");
-    _snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", L"-mx=0");
-    _snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", L"-mmt=4");
-    _snwprintf_s(exec_argv[5], VALUE_LEN, L"%s", aCmd);
-    _snwprintf_s(exec_argv[6], VALUE_LEN, L"%s", L"*");
-    for (i = 0; i < COLUMNS && *exec_argv[i] != 0; i++)
-    {
-        pg[i] = exec_argv[i];
-    }
-    if (exec_zmain(i, pg) != 0)
+    _snwprintf_s(aCmd, MAX_PATH, L"a -tzip -mx=0 -mmt=4 %s %s", omni, L"*");
+    if (exec_zmain1(aCmd) != 0)
     {
         printf("compressed file failed\n");
         return FALSE;
     }
     erase_dir(aPath);
-    return MoveFileExW(aCmd, pfile, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
+    return MoveFileExW(omni, pfile, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
 }
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -693,7 +670,7 @@ wmain(int argc, WCHAR **argv)
                     break;
                 case '7':
                 {
-                    int ret = exec_zmain(argc, argv);
+                    int ret = exec_zmain2(argc, argv);
                     return ret;
                 }
                 break;
@@ -707,6 +684,10 @@ wmain(int argc, WCHAR **argv)
                     printf("Bad argument: %ls:%ls\n", argn, argp);
                     break;
             }
+        }
+        else
+        {
+            return exec_zmain2(argc, argv);
         }
     }
     if (argc == 1)

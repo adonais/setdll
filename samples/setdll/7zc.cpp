@@ -11,14 +11,9 @@
 #include "CPP/7zip/UI/Common/ArchiveCommandLine.h"
 #include "CPP/7zip/UI/Common/ExitCode.h"
 #include "CPP/7zip/UI/Console/ConsoleClose.h"
+#include <atomic>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "oleaut32.lib")
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "advapi32.lib")
-#endif
+typedef LPWSTR *(WINAPI *CommandLineToArgvWPtr)(LPCWSTR lpCmdLine, int *pNumArgs);
 
 extern int
 Internal_Main2(int numArgs, WCHAR *args[]);
@@ -52,11 +47,37 @@ PrintError(const char *message)
 
 using namespace NWindows;
 
+// 简单的自旋锁类,防止exec_zmain1函数重入
+class SpinLock {
+
+public:
+    SpinLock() : flag_(false)
+    {}
+
+    void lock()
+    {
+        bool expect = false;
+        while (!flag_.compare_exchange_weak(expect, true))
+        {
+            expect = false;
+        }
+    }
+    void unlock()
+    {
+        flag_.store(false);
+    }
+
+private:
+    std::atomic<bool> flag_;
+};
+
+SpinLock fnSpinLock;
+
 #ifdef __cplusplus
 extern "C"
 #endif
-    int MY_CDECL
-    exec_zmain(int numArgs, WCHAR *args[])
+int MY_CDECL
+exec_zmain2(int numArgs, WCHAR *args[])
 {
     g_ErrStream = &g_StdErr;
     g_StdStream = &g_StdOut;
@@ -168,3 +189,65 @@ extern "C"
 
     return res;
 }
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int MY_CDECL
+exec_zmain1(LPCWSTR str)
+{
+    int     ret = -1;
+    LPWSTR  *args = NULL;
+    LPWSTR  lcmd = NULL;
+    int     m_arg = 0;
+    size_t  len = 0;
+    CommandLineToArgvWPtr fnCommandLineToArgvW = NULL;
+    HMODULE shell32 = LoadLibraryW(L"shell32.dll");
+    if (!shell32)
+    {
+        return ret;
+    }    
+    if (!str)
+    {
+        return ret;
+    }
+    fnSpinLock.lock();
+    do 
+    {
+        len = wcslen(str);
+        len += MAX_PATH;
+        fnCommandLineToArgvW = (CommandLineToArgvWPtr) GetProcAddress(shell32, "CommandLineToArgvW");
+        if (fnCommandLineToArgvW == NULL)
+        {
+            break;
+        }        
+        lcmd = (WCHAR *)calloc(2, len);
+        if ((lcmd = (WCHAR *)calloc(2, len)) == NULL)
+        {
+            break;
+        }
+        if (!GetModuleFileNameW(NULL,lcmd,len))
+        {
+            break;
+        }
+        wcsncat(lcmd, L" ", len); 
+        wcsncat(lcmd, str, len);      
+        args = fnCommandLineToArgvW((LPCWSTR)lcmd, &m_arg);
+        if ( NULL != args )
+        {
+            ret = exec_zmain2(m_arg, args);
+            LocalFree(args);
+        }        
+    }while(0);
+    if (lcmd)
+    {
+        free(lcmd);
+    }
+    if (shell32)
+    {
+        FreeLibrary(shell32);
+    }    
+    fnSpinLock.unlock();
+    return ret;
+}
+

@@ -9,7 +9,7 @@
 
 !include ..\common.mak
 
-LIBS=$(LIBS) kernel32.lib
+LIBS=$(LIBS) kernel32.lib oleaut32.lib user32.lib advapi32.lib
 
 all: dirs \
     $(BIND)\setdll$(BITS).exe \

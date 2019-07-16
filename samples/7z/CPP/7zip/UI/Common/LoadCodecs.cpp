@@ -102,18 +102,7 @@ static LPCWSTR const kProgramPath2Value = L"Path"
 
 static bool ReadPathFromRegistry(HKEY baseKey, LPCWSTR value, FString &path)
 {
-  NRegistry::CKey key;
-  if (key.Open(baseKey, kRegistryPath, KEY_READ) == ERROR_SUCCESS)
-  {
-    UString pathU;
-    if (key.QueryValue(value, pathU) == ERROR_SUCCESS)
-    {
-      path = us2fs(pathU);
-      NName::NormalizeDirPathPrefix(path);
-      return NFind::DoesFileExist(path + kMainDll);
-    }
-  }
-  return false;
+  return true;
 }
 
 #endif // _WIN32

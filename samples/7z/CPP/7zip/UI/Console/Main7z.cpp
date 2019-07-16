@@ -488,10 +488,6 @@ static void PrintHexId(CStdOutStream &so, UInt64 id)
 
 int Internal_Main2(int numArgs, WCHAR *args[])
 {
-  #if defined(_WIN32) && !defined(UNDER_CE)
-  SetFileApisToOEM();
-  #endif
-
   UStringVector commandStrings;
   
   GetArguments(numArgs, (const WCHAR **)args, commandStrings);
