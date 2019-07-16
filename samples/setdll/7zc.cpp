@@ -55,8 +55,8 @@ using namespace NWindows;
 #ifdef __cplusplus
 extern "C"
 #endif
-int MY_CDECL
-exec_zmain(int numArgs, WCHAR *args[])
+    int MY_CDECL
+    exec_zmain(int numArgs, WCHAR *args[])
 {
     g_ErrStream = &g_StdErr;
     g_StdStream = &g_StdOut;

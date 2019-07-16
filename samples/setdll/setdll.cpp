@@ -37,15 +37,15 @@
 #define UNUSED(c) (c) = (c)
 #define is_valid_handle(x) (x != NULL && x != INVALID_HANDLE_VALUE)
 
-typedef int  (WINAPI *SHFileOperationWPtr)(LPSHFILEOPSTRUCTW lpFileOp);
-typedef BOOL (WINAPI *PathFileExistsAPtr)(LPCSTR pszPath);
-typedef BOOL (WINAPI *PathFileExistsWPtr)(LPCWSTR pszPath);
-typedef BOOL (WINAPI *PathAppendWPtr)(LPWSTR  pszPath,LPCWSTR pszMore);
-typedef BOOL (WINAPI *PathRemoveFileSpecWPtr)(LPWSTR pszPath);
-static  PathFileExistsAPtr fnPathFileExistsA;
-static  PathFileExistsWPtr fnPathFileExistsW;
-static  PathAppendWPtr fnPathAppendW;
-static  PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
+typedef int(WINAPI *SHFileOperationWPtr)(LPSHFILEOPSTRUCTW lpFileOp);
+typedef BOOL(WINAPI *PathFileExistsAPtr)(LPCSTR pszPath);
+typedef BOOL(WINAPI *PathFileExistsWPtr)(LPCWSTR pszPath);
+typedef BOOL(WINAPI *PathAppendWPtr)(LPWSTR pszPath, LPCWSTR pszMore);
+typedef BOOL(WINAPI *PathRemoveFileSpecWPtr)(LPWSTR pszPath);
+static PathFileExistsAPtr fnPathFileExistsA;
+static PathFileExistsWPtr fnPathFileExistsW;
+static PathAppendWPtr fnPathAppendW;
+static PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
 
 ////////////////////////////////////////////////////////////// Error Messages.
 //
@@ -266,16 +266,16 @@ end:
     return bGood;
 }
 
-static HMODULE 
+static HMODULE
 init_shinfo(void)
 {
     HMODULE shlwapi = LoadLibraryW(L"shlwapi.dll");
     if (shlwapi != NULL)
     {
-		fnPathFileExistsA = (PathFileExistsAPtr)GetProcAddress(shlwapi, "PathFileExistsA");
-        fnPathFileExistsW = (PathFileExistsWPtr)GetProcAddress(shlwapi, "PathFileExistsW");
-        fnPathAppendW = (PathAppendWPtr)GetProcAddress(shlwapi, "PathAppendW");
-        fnPathRemoveFileSpecW = (PathRemoveFileSpecWPtr)GetProcAddress(shlwapi, "PathRemoveFileSpecW");
+        fnPathFileExistsA = (PathFileExistsAPtr) GetProcAddress(shlwapi, "PathFileExistsA");
+        fnPathFileExistsW = (PathFileExistsWPtr) GetProcAddress(shlwapi, "PathFileExistsW");
+        fnPathAppendW = (PathAppendWPtr) GetProcAddress(shlwapi, "PathAppendW");
+        fnPathRemoveFileSpecW = (PathRemoveFileSpecWPtr) GetProcAddress(shlwapi, "PathRemoveFileSpecW");
         if (!(fnPathFileExistsA && fnPathFileExistsW && fnPathAppendW && fnPathRemoveFileSpecW))
         {
             FreeLibrary(shlwapi);
@@ -284,34 +284,7 @@ init_shinfo(void)
     }
     return shlwapi;
 }
-/*
-static BOOL
-init_file_strings(LPCWSTR names, WCHAR *out_path)
-{
-    WCHAR filename[MAX_PATH];
-    if (!GetModuleFileNameW(NULL, filename, MAX_PATH))
-    {
-        return FALSE;
-    }
-    if (!fnPathRemoveFileSpecW(filename))
-    {
-        return FALSE;
-    }
-    if (!fnPathAppendW(filename, names))
-    {
-        return FALSE;
-    }
-    if (!fnPathFileExistsW(filename))
-    {
-        return FALSE;
-    }
-    if (NULL != out_path)
-    {
-        swprintf_s(out_path, MAX_PATH, L"%s", filename);
-    }
-    return TRUE;
-}
-*/
+
 static BOOL
 fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
 {
@@ -385,7 +358,7 @@ edit_files(LPCWSTR lpath)
     char f_xul[MAX_PATH + 1] = { 0 };
     char f_dtd[MAX_PATH + 1] = { 0 };
     char f_js[MAX_PATH + 1] = { 0 };
-	char path[MAX_PATH + 1] = { 0 };
+    char path[MAX_PATH + 1] = { 0 };
     LPCSTR js_desc1 = "this.onSaveableLink || this.onPlainTextLink);";
     LPCSTR js_desc2 = "Backwards-compatibility wrapper";
     LPCSTR js_inst1 = "    this.showItem(\"context-downloadlink\", this.onSaveableLink || this.onPlainTextLink);";
@@ -431,12 +404,12 @@ edit_files(LPCWSTR lpath)
     {
         printf("lpath is null\n");
         return FALSE;
-    }		
+    }
     if (!WideCharToMultiByte(CP_UTF8, 0, lpath, -1, path, sizeof(path), NULL, NULL))
     {
         printf("WideCharToMultiByte path return false\n");
         return FALSE;
-    }	
+    }
     _snprintf_s(f_dtd, MAX_PATH, "%s\\%s", path, file3);
     cn = fnPathFileExistsA(f_dtd);
     if (!cn)
@@ -491,60 +464,60 @@ edit_files(LPCWSTR lpath)
 static BOOL
 erase_dir(LPCWSTR lpszDir, BOOL noRecycle = TRUE)
 {
-	int ret = -1;
-	WCHAR *pszFrom = NULL;
+    int ret = -1;
+    WCHAR *pszFrom = NULL;
     size_t len = 0;
-	SHFileOperationWPtr fnSHFileOperationW = NULL;
-	HMODULE shell32 = LoadLibraryW(L"shell32.dll");
-	if (!shell32)
-	{
-		return FALSE;
-	}
-	if (!lpszDir)
-	{
-		return FALSE;
-	}
-	do 
-	{
-		len = wcslen(lpszDir);
-		fnSHFileOperationW = (SHFileOperationWPtr)GetProcAddress(shell32, "SHFileOperationW");
+    SHFileOperationWPtr fnSHFileOperationW = NULL;
+    HMODULE shell32 = LoadLibraryW(L"shell32.dll");
+    if (!shell32)
+    {
+        return FALSE;
+    }
+    if (!lpszDir)
+    {
+        return FALSE;
+    }
+    do
+    {
+        len = wcslen(lpszDir);
+        fnSHFileOperationW = (SHFileOperationWPtr) GetProcAddress(shell32, "SHFileOperationW");
         if (fnSHFileOperationW == NULL)
         {
-        	break;
+            break;
         }
         if ((pszFrom = (WCHAR *) calloc(2, len + 4)) == NULL)
         {
-        	break;
+            break;
         }
         wcscpy_s(pszFrom, len + 2, lpszDir);
         pszFrom[len] = 0;
         pszFrom[len + 1] = 0;
-        
+
         SHFILEOPSTRUCTW fileop;
         fileop.hwnd = NULL;                              // no status display
         fileop.wFunc = FO_DELETE;                        // delete operation
         fileop.pFrom = pszFrom;                          // source file name as double null terminated string
         fileop.pTo = NULL;                               // no destination needed
         fileop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT; // do not prompt the user
-        
-        if (!noRecycle) 
-		{
-			fileop.fFlags |= FOF_ALLOWUNDO;
+
+        if (!noRecycle)
+        {
+            fileop.fFlags |= FOF_ALLOWUNDO;
         }
         fileop.fAnyOperationsAborted = FALSE;
         fileop.lpszProgressTitle = NULL;
         fileop.hNameMappings = NULL;
         // SHFileOperation returns zero if successful; otherwise nonzero
         ret = fnSHFileOperationW(&fileop);
-	} while (0);
-	if (pszFrom)
-	{
+    } while (0);
+    if (pszFrom)
+    {
         free(pszFrom);
-	}
-	if (shell32)
-	{
-         FreeLibrary(shell32);
-	}	
+    }
+    if (shell32)
+    {
+        FreeLibrary(shell32);
+    }
     return (0 == ret);
 }
 
@@ -564,10 +537,12 @@ Patched_File(LPCWSTR pfile)
     WCHAR aPath[MAX_PATH + 1] = { 0 };
     WCHAR aCmd[MAX_PATH + 1] = { 0 };
     WCHAR temp[LEN_NAME + 1];
-	WCHAR *pg[COLUMNS] = {0};
-    WCHAR exec_argv[COLUMNS][VALUE_LEN+1] ={{0,}};
+    WCHAR *pg[COLUMNS] = { 0 };
+    WCHAR exec_argv[COLUMNS][VALUE_LEN + 1] = { {
+        0,
+    } };
     int i = 0;
-    if (!GetModuleFileNameW(NULL,exec_argv[0],VALUE_LEN))
+    if (!GetModuleFileNameW(NULL, exec_argv[0], VALUE_LEN))
     {
         return FALSE;
     }
@@ -577,9 +552,9 @@ Patched_File(LPCWSTR pfile)
     }
     if (!fnPathFileExistsW(pfile))
     {
-		printf("dist file not exist\n");
+        printf("dist file not exist\n");
         return FALSE;
-    }	
+    }
     if (!GetTempPathW(MAX_PATH, aPath))
     {
         return FALSE;
@@ -594,15 +569,15 @@ Patched_File(LPCWSTR pfile)
         return FALSE;
     }
     _snwprintf_s(aCmd, MAX_PATH, L"-o%s", aPath);
-	_snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"x");
-	_snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-aoa");
-	_snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", aCmd);
-	_snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", pfile);
-	for (i=0; i<COLUMNS && *exec_argv[i]!=0; i++)
-	{
-		pg[i] = exec_argv[i];
-	}
-	exec_zmain(i, pg);
+    _snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"x");
+    _snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-aoa");
+    _snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", aCmd);
+    _snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", pfile);
+    for (i = 0; i < COLUMNS && *exec_argv[i] != 0; i++)
+    {
+        pg[i] = exec_argv[i];
+    }
+    exec_zmain(i, pg);
     _snwprintf_s(aCmd, MAX_PATH, L"%s", pfile);
     if (!(fnPathRemoveFileSpecW(aCmd) && fnPathAppendW(aCmd, L"omni.zip") && SetCurrentDirectoryW(aPath)))
     {
@@ -614,20 +589,20 @@ Patched_File(LPCWSTR pfile)
         printf("edit_files failed\n");
         return FALSE;
     }
-	_snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"a");
-	_snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-tzip");
-	_snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", L"-mx=0");
-	_snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", L"-mmt=4");
-	_snwprintf_s(exec_argv[5], VALUE_LEN, L"%s", aCmd);
-	_snwprintf_s(exec_argv[6], VALUE_LEN, L"%s", L"*");	
-	for (i=0; i<COLUMNS && *exec_argv[i]!=0; i++)
-	{
-		pg[i] = exec_argv[i];
-	}
+    _snwprintf_s(exec_argv[1], VALUE_LEN, L"%s", L"a");
+    _snwprintf_s(exec_argv[2], VALUE_LEN, L"%s", L"-tzip");
+    _snwprintf_s(exec_argv[3], VALUE_LEN, L"%s", L"-mx=0");
+    _snwprintf_s(exec_argv[4], VALUE_LEN, L"%s", L"-mmt=4");
+    _snwprintf_s(exec_argv[5], VALUE_LEN, L"%s", aCmd);
+    _snwprintf_s(exec_argv[6], VALUE_LEN, L"%s", L"*");
+    for (i = 0; i < COLUMNS && *exec_argv[i] != 0; i++)
+    {
+        pg[i] = exec_argv[i];
+    }
     if (exec_zmain(i, pg) != 0)
     {
         printf("compressed file failed\n");
-		return FALSE;
+        return FALSE;
     }
     erase_dir(aPath);
     return MoveFileExW(aCmd, pfile, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
@@ -689,7 +664,7 @@ wmain(int argc, WCHAR **argv)
                 case 'P':
                     if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
                     {
-						// MessageBoxW(NULL, w_szDllPath, L"w_sz:", 0);
+                        // MessageBoxW(NULL, w_szDllPath, L"w_sz:", 0);
                     }
                     else
                     {
@@ -701,13 +676,13 @@ wmain(int argc, WCHAR **argv)
                     }
                     if (strlen(s_szDllPath) > 1)
                     {
-						HMODULE shlwapi = init_shinfo();
-						if (shlwapi != NULL)
-						{
+                        HMODULE shlwapi = init_shinfo();
+                        if (shlwapi != NULL)
+                        {
                             Patched_File(w_szDllPath);
-							FreeLibrary(shlwapi);
-							return 0;
-						}
+                            FreeLibrary(shlwapi);
+                            return 0;
+                        }
                         return 1;
                     }
                     break;
@@ -717,11 +692,11 @@ wmain(int argc, WCHAR **argv)
                     s_fRemove = TRUE;
                     break;
                 case '7':
-				{
-					int ret = exec_zmain(argc, argv);
-					return ret;
-				}
-                    break;					
+                {
+                    int ret = exec_zmain(argc, argv);
+                    return ret;
+                }
+                break;
 
                 case '?': // Help
                     fNeedHelp = TRUE;
