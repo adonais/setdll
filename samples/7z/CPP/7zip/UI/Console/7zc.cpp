@@ -229,7 +229,7 @@ exec_zmain1(LPCWSTR str)
         {
             break;
         }
-        if (!GetModuleFileNameW(NULL,lcmd,len))
+        if (!GetModuleFileNameW(NULL,lcmd,(DWORD)len))
         {
             break;
         }
