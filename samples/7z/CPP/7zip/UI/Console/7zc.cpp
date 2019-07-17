@@ -1,16 +1,19 @@
-#include "CPP/Common/Common.h"
+#include "StdAfx.h"
 
 #ifdef _WIN32
-#include "C/DllSecur.h"
+#include "../../../../C/DllSecur.h"
 #endif
 
-#include "CPP/Common/MyException.h"
-#include "CPP/Common/StdOutStream.h"
-#include "CPP/Windows/ErrorMsg.h"
-#include "CPP/Windows/NtCheck.h"
-#include "CPP/7zip/UI/Common/ArchiveCommandLine.h"
-#include "CPP/7zip/UI/Common/ExitCode.h"
-#include "CPP/7zip/UI/Console/ConsoleClose.h"
+#include "../../../Common/MyException.h"
+#include "../../../Common/StdOutStream.h"
+
+#include "../../../Windows/ErrorMsg.h"
+#include "../../../Windows/NtCheck.h"
+
+#include "../Common/ArchiveCommandLine.h"
+#include "../Common/ExitCode.h"
+
+#include "ConsoleClose.h"
 #include <atomic>
 
 typedef LPWSTR *(WINAPI *CommandLineToArgvWPtr)(LPCWSTR lpCmdLine, int *pNumArgs);
@@ -202,12 +205,12 @@ exec_zmain1(LPCWSTR str)
     int     m_arg = 0;
     size_t  len = 0;
     CommandLineToArgvWPtr fnCommandLineToArgvW = NULL;
-    HMODULE shell32 = LoadLibraryW(L"shell32.dll");
-    if (!shell32)
+    HMODULE shell32 = NULL;
+    if (!str || *str == 0)
     {
         return ret;
-    }    
-    if (!str)
+    }
+    if ((shell32 = LoadLibraryW(L"shell32.dll")) == NULL)
     {
         return ret;
     }

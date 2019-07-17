@@ -63,6 +63,7 @@ CFLAGS=$(CFLAGS) /D_$(DETOURS_TARGET_PROCESSOR:X64=AMD64)_ # redundant with wind
 
 !ENDIF
 
+CFLAGS=$(CFLAGS) -I..\7z\C
 DEPS = $(LIBD)\detours.lib $(LIBD)\7z.lib
 LIBS = $(LIBD)\detours.lib /WHOLEARCHIVE:$(LIBD)\7z.lib
 

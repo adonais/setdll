@@ -11,6 +11,7 @@ CONSOLE_OBJS = \
   $O\HashCon.obj \
   $O\List.obj \
   $O\Main7z.obj \
+  $O\7zc.obj \
   $O\OpenCallbackConsole.obj \
   $O\PercentPrinter.obj \
   $O\UpdateCallbackConsole.obj \
