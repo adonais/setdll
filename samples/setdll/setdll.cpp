@@ -593,11 +593,11 @@ PrintUsage(void)
         "Usage:\n"
         "    setdll [options] binary_files\n"
         "Options:\n"
-        "    /d:file.dll  : Add file.dll binary files\n"
-        "    /r           : Remove extra DLLs from binary files\n"
-        "    /p:omni.ja   : Patched omni.ja files\n"
-        "    /?           : This help screen.\n"
-        "    -7 --help    : 7z help screen.\n");
+        "    /d:file.dll          : Add file.dll binary files\n"
+        "    /r                   : Remove extra DLLs from binary files\n"
+        "    /p:browser\\omni.ja   : Repair omni.ja to support Upcheck.exe\n"
+        "    /?                   : This help screen\n"
+        "    -7 --help            : 7z command help screen\n");
 }
 
 //////////////////////////////////////////////////////////////////////// main.
