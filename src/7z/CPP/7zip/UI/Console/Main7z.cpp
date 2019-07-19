@@ -78,9 +78,10 @@ static const char * const kCopyrightString = "\n7-Zip"
   " " MY_VERSION_CPU
   " : " MY_COPYRIGHT_DATE "\n\n";
 
-static const char * const kHelpString =
-    "Usage: 7z"
-#ifndef EXTERNAL_CODECS
+static const char *kHelpString =
+    "Usage: \n"
+    "%s"
+#if 0
 #ifdef PROG_VARIANT_R
     "r"
 #else
@@ -163,6 +164,97 @@ static const char * const kUnsupportedArcTypeMessage = "Unsupported archive type
 
 #define kDefaultSfxModule "7zCon.sfx"
 
+#define N_SIZE 64
+
+#if defined(_WIN64)
+#define __readtebbyte   __readgsbyte
+#define __readtebword   __readgsword
+#define __readtebdword  __readgsdword
+#define __readtebqword  __readgsqword
+#define __readtebptr    __readgsqword
+#else
+#define __readtebbyte   __readfsbyte
+#define __readtebword   __readfsword
+#define __readtebdword  __readfsdword
+#define __readtebqword  __readfsqword
+#define __readtebptr    __readfsdword
+#endif
+
+typedef struct _unicode_string
+{
+    unsigned short length;
+    unsigned short maximum_length;
+    wchar_t* buffer;
+}unicode_string,*unicode_string_p;
+
+static wchar_t *
+in_wcsrchr(wchar_t* str, wchar_t char1, wchar_t char2) 
+{
+    wchar_t *ptr1 = wcsrchr(str, char1);
+    wchar_t *ptr2 = wcsrchr(str, char2);
+    if (!ptr1)
+        return ptr2;
+    if (!ptr2)
+        return ptr1;
+    if (ptr1 < ptr2)
+        return ptr2;
+    return ptr1;
+}
+
+static LPSTR
+mystristr(LPCSTR Str, LPCSTR Pat)
+{
+    char *pptr, *sptr, *start;
+
+    for (start = (char *)Str; *start != '\0'; start++)
+    {
+        for ( ; ((*start!='\0') && (toupper(*start) != toupper(*Pat))); start++);
+        if ('\0' == *start) return NULL;
+        pptr = (char *)Pat;
+        sptr = (char *)start;
+        while (toupper(*sptr) == toupper(*pptr))
+        {
+            sptr++;
+            pptr++;
+            if (L'\0' == *pptr) return (start);
+        }
+    }
+    return NULL;
+}
+
+#ifdef __cplusplus
+extern "C"
+#endif
+bool WINAPI
+get_process_name(char *path, int len)
+{
+    int ret = 0;
+    WCHAR *p = NULL;
+    uintptr_t peb_p=__readtebptr(12*sizeof(void*));
+    if(peb_p)
+    {
+        uintptr_t proc_param=*(uintptr_t*)(peb_p+sizeof(void*)*4);
+        if(proc_param)
+        {
+            char *lang = NULL;
+            unicode_string_p img_path=(unicode_string_p)(proc_param+sizeof(void*)*10+0x10);
+            if ((p = in_wcsrchr(img_path->buffer, L'\\', L'/')) != NULL)
+            {
+                if((lang = getenv("LANG")) != NULL && mystristr(lang, "utf-8") != NULL)
+                {
+                    ret = WideCharToMultiByte(CP_UTF8, 0, p+1, -1, path, len, NULL, NULL);
+                }
+                else
+                {
+                    ret = WideCharToMultiByte(CP_ACP, 0, p+1, -1, path, len, NULL, NULL);
+                }                   
+            }
+ 
+        }
+    }
+    return (ret > 0);
+}
+
 static void ShowMessageAndThrowException(LPCSTR message, NExitCode::EEnum code)
 {
   if (g_ErrStream)
@@ -183,12 +275,21 @@ static void GetArguments(int numArgs, const WCHAR **args, UStringVector &parts)
 
 static void ShowCopyrightAndHelp(CStdOutStream *so, bool needHelp)
 {
+  char path[N_SIZE] = {0};
+  int len = (int)strlen(kHelpString)+N_SIZE;
+  char *sHelpString = NULL;
   if (!so)
     return;
+  if (!get_process_name(path, N_SIZE))
+    return;
+  sHelpString = (char*)calloc(1, len);
+  if (!sHelpString)
+    return;    
+  _snprintf(sHelpString, len, kHelpString, path);
   *so << kCopyrightString;
-  // *so << "# CPUs: " << (UInt64)NWindows::NSystem::GetNumberOfProcessors() << endl;
   if (needHelp)
-    *so << kHelpString;
+    *so << sHelpString;
+  free(sHelpString);
 }
 
 

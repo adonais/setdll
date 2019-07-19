@@ -589,15 +589,26 @@ Patched_File(LPCWSTR pfile)
 static void
 PrintUsage(void)
 {
-    printf(
+    #define N_SIZE 64
+    const char *k_help = 
         "Usage:\n"
-        "    setdll [options] binary_files\n"
+        "    %s [options] binary_files\n"
         "Options:\n"
         "    /d:file.dll          : Add file.dll binary files\n"
         "    /r                   : Remove extra DLLs from binary files\n"
         "    /p:browser\\omni.ja   : Repair omni.ja to support Upcheck.exe\n"
         "    /?                   : This help screen\n"
-        "    -7 --help            : 7z command help screen\n");
+        "    -7 --help            : 7z command help screen\n";    
+    char path[N_SIZE] = {0};
+    int len = (int)strlen(k_help)+N_SIZE;
+    char *s_help = (char*)calloc(1, len);
+    if (s_help  && get_process_name(path, N_SIZE))
+    {
+        sprintf_s(s_help, len, k_help, path);
+        printf(s_help);
+		free(s_help);
+    }    
+    #undef N_SIZE
 }
 
 //////////////////////////////////////////////////////////////////////// main.

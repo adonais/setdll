@@ -6,14 +6,14 @@ CFLAGS = $(CFLAGS) -DUNICODE -D_UNICODE
 
 !IFNDEF O
 !IFDEF PLATFORM
-O=../../../../../../lib.$(PLATFORM)
+O=..\..\..\..\..\..\.dep
 !ELSE
 O=o
 !ENDIF
 !ENDIF
 
-# CFLAGS = $(CFLAGS) -FAsc -Fa$O/asm/
-
+INCD = ..\..\..\..\..\..\include
+BIND = ..\..\..\..\..\..\Release
 
 !IF "$(PLATFORM)" == "x64"
 MY_ML = ml64 -Dx64 -WX
@@ -45,7 +45,7 @@ COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
 COMPL_ASM = $(MY_ML) -c -Fo$O/ $**
 !ENDIF
 
-CFLAGS = $(CFLAGS) -nologo -c -Fo$O/ -W4 -WX -EHsc -Gy -GR- -GF
+CFLAGS = $(CFLAGS) -nologo -c -Zi /Fd$(BIND)\7z.pdb -Fo$O/ -W4 -WX -EHsc -Gy -GR- -GF
 
 !IFDEF MY_DYNAMIC_LINK
 CFLAGS = $(CFLAGS) -MD
@@ -117,7 +117,7 @@ LFLAGS = $(LFLAGS) /SUBSYSTEM:windows,$(MY_SUB_SYS_VER)
 !ENDIF
 
 
-PROGPATH = $O\$(PROG)
+PROGPATH = $(BIND)\$(PROG)
 
 COMPL_O1   = $(CC) $(CFLAGS_O1) $**
 COMPL_O2   = $(CC) $(CFLAGS_O2) $**
@@ -135,15 +135,24 @@ CCOMPL      = $(CC) $(CFLAGS_C_ALL) $**
 CCOMPLB     = $(CC) $(CFLAGS_C_ALL) $<
 
 
-all: $(PROGPATH)
+all: $(INCD)\7zc.h \
+     $(PROGPATH)   \
 
 clean:
-	-del /Q $(PROGPATH) $O\*.exe $O\*.dll $O\*.obj $O\*.lib $O\*.exp $O\*.res $O\*.pch $O\*.asm
+    if exist $O del /q  $O\*.obj $O\*.lib $O\*.exp $O\*.res $O\*.pch 2>nul
+    if exist $(PROGPATH) del /q  $(PROGPATH) 2>nul
+    if exist $(INCD)\7zc.h del /q  $(INCD)\7zc.h 2>nul
 
 $O:
-	if not exist "$O" mkdir "$O"
-$O/asm:
-	if not exist "$O/asm" mkdir "$O/asm"
+	if not exist "$O" mkdir "$O" 2>nul
+	if not exist $(BIND) mkdir $(BIND)
+	
+$O\asm:
+	if not exist "$O\asm" mkdir "$O\asm"
+	
+$(INCD)\7zc.h:
+	if not exist "$(INCD)" mkdir "$(INCD)"
+	@copy ..\..\..\..\C\7zc.h $@ /y >nul
 
 $(PROGPATH): $O $O/asm $(OBJS) $(DEF_FILE)
 	lib /nologo -out:$(PROGPATH) $(OBJS)

@@ -1,11 +1,4 @@
 ##############################################################################
-##
-##  Common makefile for Detours test programs.
-##
-##  Microsoft Research Detours Package
-##
-##  Copyright (c) Microsoft Corporation.  All rights reserved.
-##
 
 !IF "$(ROOT)" == ""
 ROOT = ..\..
@@ -32,7 +25,7 @@ CFLAGS=$(CFLAGS) /I$(INCD)
 !ENDIF
 
 LIBFLAGS=/nologo
-LINKFLAGS=/release /incremental:no /profile /nodefaultlib:oldnames.lib
+LINKFLAGS=/nologo /release /incremental:no /profile /nodefaultlib:oldnames.lib
 
 !if defined(DETOURS_WIN_7) && defined(DETOURS_CL_17_OR_NEWER)
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
@@ -63,25 +56,7 @@ CFLAGS=$(CFLAGS) /D_$(DETOURS_TARGET_PROCESSOR:X64=AMD64)_ # redundant with wind
 
 !ENDIF
 
-CFLAGS=$(CFLAGS) -I..\7z\C
-DEPS = $(LIBD)\detours.lib $(LIBD)\7z.lib
-LIBS = $(LIBD)\detours.lib /WHOLEARCHIVE:$(LIBD)\7z.lib
+DEPS = $(BIND)\detours.lib $(BIND)\7z.lib
+LIBS = $(BIND)\detours.lib /WHOLEARCHIVE:$(BIND)\7z.lib
 
-##############################################################################
-##
-
-.SUFFIXES: .cpp .h .obj .rc .res
-
-!ifdef DETOURS_ANALYZE
-.cpp{$(OBJD)}.obj:
-    $(CC) $(CFLAGS) /Fd$(OBJD)\vc.pdb /Fo$(OBJD)\ /c $<
-!else
-.cpp{$(OBJD)}.obj::
-    $(CC) $(CFLAGS) /Fd$(OBJD)\vc.pdb /Fo$(OBJD)\ /c $<
-!endif
-
-.rc{$(OBJD)}.res:
-    rc /DDETOURS_BITS=$(DETOURS_BITS) /fo$(@) /i$(INCD) $(*B).rc
-
-##
 ################################################################# End of File.

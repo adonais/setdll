@@ -7,6 +7,7 @@ extern "C" {
 
 extern int __cdecl exec_zmain1(const wchar_t *args);
 extern int __cdecl exec_zmain2(int numArgs, wchar_t *args[]);
+extern bool __stdcall get_process_name(char *path, int len);
 
 #ifdef __cplusplus
 }
