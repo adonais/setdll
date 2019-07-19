@@ -620,16 +620,17 @@ wmain(int argc, WCHAR **argv)
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
     int arg = 1;
+    BOOL m_7z = FALSE;
     for (; arg < argc; arg++)
     {
-        if (argv[arg][0] == '-' || argv[arg][0] == '/')
+        m_7z = argv[arg][0] == '-' || argv[arg][0] == '/';
+        if (m_7z)
         {
             WCHAR *argn = argv[arg] + 1;
             WCHAR *argp = argn;
             while (*argp && *argp != ':' && *argp != '=')
                 argp++;
             if (*argp == ':' || *argp == '=') *argp++ = '\0';
-
             switch (argn[0])
             {
 
@@ -696,7 +697,7 @@ wmain(int argc, WCHAR **argv)
                     break;
             }
         }
-        else
+        else if (m_7z)
         {
             return exec_zmain2(argc, argv);
         }
