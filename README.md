@@ -16,8 +16,14 @@ Usage:
     setdll [options] binary_files
     
 Options:
+
     /d:file.dll         :        Add file.dll binary files
+    
     /r                  :        Remove extra DLLs from binary files
+    
     /p:browser\omni.ja  :        Repair omni.ja to support Upcheck.exe
+    
     /?                  :        This help screen
+    
     -7 --help           :        7z command help screen
+    
