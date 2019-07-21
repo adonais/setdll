@@ -224,8 +224,8 @@ exec_zmain1(LPCWSTR str)
         {
             break;
         }        
-        lcmd = (WCHAR *)calloc(2, len);
-        if ((lcmd = (WCHAR *)calloc(2, len)) == NULL)
+        lcmd = (WCHAR *)calloc(len, sizeof(WCHAR));
+        if ((lcmd = (WCHAR *)calloc(len, sizeof(WCHAR))) == NULL)
         {
             break;
         }

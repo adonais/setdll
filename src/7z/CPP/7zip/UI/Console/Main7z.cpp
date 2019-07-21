@@ -282,7 +282,7 @@ static void ShowCopyrightAndHelp(CStdOutStream *so, bool needHelp)
     return;
   if (!get_process_name(path, N_SIZE))
     return;
-  sHelpString = (char*)calloc(1, len);
+  sHelpString = (char*)calloc(len, sizeof(char));
   if (!sHelpString)
     return;    
   _snprintf(sHelpString, len, kHelpString, path);

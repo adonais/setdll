@@ -314,14 +314,14 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         len -= pos;
         printf("len = %d\n", len);
         fseek(fp, pos, SEEK_SET);
-        char *next = (char *) calloc(1, len);
+        char *next = (char *) calloc(len, sizeof(char));
         if (!next)
         {
             printf("calloc next false\n");
             fclose(fp);
             return FALSE;
         }
-        char *backup = (char *) calloc(1, len);
+        char *backup = (char *) calloc(len, sizeof(char));
         DWORD offset = 0;
         if (!backup)
         {
@@ -483,7 +483,7 @@ erase_dir(LPCWSTR lpszDir, BOOL noRecycle = TRUE)
         {
             break;
         }
-        if ((pszFrom = (WCHAR *) calloc(2, len + 4)) == NULL)
+        if ((pszFrom = (WCHAR *) calloc(len+4, sizeof(WCHAR))) == NULL)
         {
             break;
         }
@@ -601,7 +601,7 @@ PrintUsage(void)
         "    -7 --help            : 7z command help screen\n";    
     char path[N_SIZE] = {0};
     int len = (int)strlen(k_help)+N_SIZE;
-    char *s_help = (char*)calloc(1, len);
+    char *s_help = (char*)calloc(len, sizeof(char));
     if (s_help  && get_process_name(path, N_SIZE))
     {
         sprintf_s(s_help, len, k_help, path);
