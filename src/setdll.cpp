@@ -617,14 +617,13 @@ int CDECL
 wmain(int argc, WCHAR **argv)
 {
     BOOL fNeedHelp = FALSE;
+    BOOL fNeedZip  = TRUE;
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
     int arg = 1;
-    BOOL m_7z = FALSE;
     for (; arg < argc; arg++)
     {
-        m_7z = argv[arg][0] == '-' || argv[arg][0] == '/';
-        if (m_7z)
+        if (argv[arg][0] == '-' || argv[arg][0] == '/')
         {
             WCHAR *argn = argv[arg] + 1;
             WCHAR *argp = argn;
@@ -647,6 +646,7 @@ wmain(int argc, WCHAR **argv)
                     {
                         s_szDllPath[0] = 0;
                     }
+                    fNeedZip = FALSE;
                     break;
 
                 case 'p': // Fixed omni
@@ -674,30 +674,31 @@ wmain(int argc, WCHAR **argv)
                         }
                         return 1;
                     }
+                    fNeedZip = FALSE;
                     break;
 
                 case 'r': // Remove extra set DLLs.
                 case 'R':
                     s_fRemove = TRUE;
+                    fNeedZip = FALSE;
                     break;
                 case '7':
                 {
-                    int ret = exec_zmain2(argc, argv);
-                    return ret;
+                    return exec_zmain2(argc, argv);
                 }
                 break;
 
                 case '?': // Help
                     fNeedHelp = TRUE;
+                    fNeedZip = FALSE;
                     break;
 
                 default:
-                    fNeedHelp = TRUE;
-                    printf("Bad argument: %ls:%ls\n", argn, argp);
+                    fNeedZip = TRUE;
                     break;
             }
         }
-        else if (m_7z)
+        else if (fNeedZip)
         {
             return exec_zmain2(argc, argv);
         }

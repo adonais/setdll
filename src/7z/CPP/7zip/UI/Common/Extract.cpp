@@ -314,7 +314,7 @@ HRESULT Extract(
   
   if (options.YesToLog)
   {
-	printf("yes ,we write log file by adonais\n");
+	printf("Local file recording has been enabled\n");
   }
   
   for (i = 0; i < numArcs; i++)

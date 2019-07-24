@@ -98,6 +98,22 @@ int CHardLinkNode::Compare(const CHardLinkNode &a) const
   return MyCompare(INode, a.INode);
 }
 
+static void wchr_replace(LPWSTR path)
+{
+    LPWSTR   lp = NULL;
+    intptr_t pos;
+    do
+    {
+        lp =  wcschr(path,L'\\');
+        if (lp)
+        {
+            pos = lp-path;
+            path[pos] = L'/';
+        }
+    } while (lp!=NULL);
+    return;
+}
+
 static HRESULT Archive_Get_HardLinkNode(IInArchive *archive, UInt32 index, CHardLinkNode &h, bool &defined)
 {
   h.INode = 0;
@@ -690,22 +706,6 @@ STDMETHODIMP CArchiveExtractCallback::GetStream(UInt32 index, ISequentialOutStre
     else if (prop.vt != VT_EMPTY)
       return E_FAIL;
   }
-  
-  /*
-  {
-    NCOM::CPropVariant prop;
-    RINOK(archive->GetProperty(index, kpidCopyLink, &prop));
-    if (prop.vt == VT_BSTR)
-    {
-      isHardLink = false;
-      isCopyLink = true;
-      isRelative = false; // RAR5: copy links are from root folder of archive
-      linkPath.SetFromBstr(prop.bstrVal);
-    }
-    else if (prop.vt != VT_EMPTY)
-      return E_FAIL;
-  }
-  */
 
   {
     NCOM::CPropVariant prop;
@@ -1069,7 +1069,18 @@ if (askExtractMode == NArchive::NExtract::NAskMode::kExtract && !_testMode)
       }
     }
 
-
+    /* by adonais */
+#if defined(_WIN32) && !defined(UNDER_CE)     
+    if (logs != NULL)
+    {
+        WCHAR tmp_names[MAX_PATH+1] = {0};
+        _snwprintf(tmp_names, MAX_PATH, L"%ls", processedPath.GetBuf());
+        wchr_replace(tmp_names);
+        fwrite(tmp_names, sizeof(WCHAR), wcslen(tmp_names), logs);
+        fwrite(L"\r\n", sizeof(WCHAR), 2, logs); 
+    }
+#endif
+    
     FString fullProcessedPath (us2fs(processedPath));
     if (_pathMode != NExtract::NPathMode::kAbsPaths
         || !NName::IsAbsolutePath(processedPath))
