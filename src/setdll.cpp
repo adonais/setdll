@@ -394,6 +394,7 @@ edit_files(LPCWSTR lpath)
 <!ENTITY downloadLinkCmd.label \"Download Link With Upcheck\">\n\
 <!ENTITY downloadLinkCmd.accesskey    "
         ">\n";
+    LPCSTR file0 = "chrome\\browser\\content\\browser\\browser.xhtml";
     LPCSTR file1 = "chrome\\browser\\content\\browser\\browser.xul";
     LPCSTR file2 = "chrome\\browser\\content\\browser\\nsContextMenu.js";
     LPCSTR file3 = "chrome\\zh-CN\\locale\\browser\\browser.dtd";
@@ -420,6 +421,10 @@ edit_files(LPCWSTR lpath)
     }
     _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file1);
     _snprintf_s(f_js, MAX_PATH, "%s\\%s", path, file2);
+    if (!fnPathFileExistsA(f_xul))
+    {
+        _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file0);
+    }    
     if (!(fnPathFileExistsA(f_xul) && fnPathFileExistsA(f_js)))
     {
         printf("file not exist\n");
@@ -621,6 +626,17 @@ wmain(int argc, WCHAR **argv)
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
     int arg = 1;
+	const HMODULE hlib = GetModuleHandleW(L"kernel32.dll");
+	SetDllDirectoryW(L"");
+	if (hlib)
+	{
+	    typedef BOOL (WINAPI * SSPM) (DWORD);
+	    const SSPM fnSetSearchPathMode = (SSPM)GetProcAddress (hlib, "SetSearchPathMode");
+	    if (fnSetSearchPathMode)
+	    {
+	  	    fnSetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+	    }
+	}    
     for (; arg < argc; arg++)
     {
         if (argv[arg][0] == '-' || argv[arg][0] == '/')
@@ -629,13 +645,18 @@ wmain(int argc, WCHAR **argv)
             WCHAR *argp = argn;
             while (*argp && *argp != ':' && *argp != '=')
                 argp++;
-            if (*argp == ':' || *argp == '=') *argp++ = '\0';
+            if (*argp == ':' || *argp == '=') *argp++ = '\0';        
             switch (argn[0])
             {
 
                 case 'd': // Set DLL
                 case 'D':
-                    if ((wcschr(argp, ':') != NULL || wcschr(argp, '\\') != NULL) && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
+		            if (wcslen(argp) < 2)
+		            {
+		                fNeedHelp = TRUE;
+		                break;
+		            }                  	
+                    if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
                     {
                     }
                     else
@@ -651,6 +672,11 @@ wmain(int argc, WCHAR **argv)
 
                 case 'p': // Fixed omni
                 case 'P':
+		            if (wcslen(argp) < 2)
+		            {
+		                fNeedHelp = TRUE;
+		                break;
+		            }                	
                     if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
                     {
                         // MessageBoxW(NULL, w_szDllPath, L"w_sz:", 0);
