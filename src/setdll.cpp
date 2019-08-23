@@ -625,18 +625,7 @@ wmain(int argc, WCHAR **argv)
     BOOL fNeedZip  = TRUE;
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
-    int arg = 1;
-	const HMODULE hlib = GetModuleHandleW(L"kernel32.dll");
-	SetDllDirectoryW(L"");
-	if (hlib)
-	{
-	    typedef BOOL (WINAPI * SSPM) (DWORD);
-	    const SSPM fnSetSearchPathMode = (SSPM)GetProcAddress (hlib, "SetSearchPathMode");
-	    if (fnSetSearchPathMode)
-	    {
-	  	    fnSetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
-	    }
-	}    
+    int arg = 1;  
     for (; arg < argc; arg++)
     {
         if (argv[arg][0] == '-' || argv[arg][0] == '/')
@@ -656,7 +645,7 @@ wmain(int argc, WCHAR **argv)
 		                fNeedHelp = TRUE;
 		                break;
 		            }                  	
-                    if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
+                    if ((wcschr(argp, ':') != NULL || wcschr(argp, '\\') != NULL) && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
                     {
                     }
                     else
