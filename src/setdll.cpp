@@ -391,9 +391,8 @@ edit_files(LPCWSTR lpath)
 <!ENTITY downloadLinkCmd.accesskey    \"\">\n";
     LPCSTR dtd_inst2 =
         "\
-<!ENTITY downloadLinkCmd.label \"Download Link With Upcheck\">\n\
-<!ENTITY downloadLinkCmd.accesskey    "
-        ">\n";
+<!ENTITY downloadLinkCmd.label        \"Download Link With Upcheck\">\n\
+<!ENTITY downloadLinkCmd.accesskey    \"\">\n";
     LPCSTR file0 = "chrome\\browser\\content\\browser\\browser.xhtml";
     LPCSTR file1 = "chrome\\browser\\content\\browser\\browser.xul";
     LPCSTR file2 = "chrome\\browser\\content\\browser\\nsContextMenu.js";
