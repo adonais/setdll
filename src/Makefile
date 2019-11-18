@@ -29,6 +29,6 @@ $(OBJD)\resource.res : resource.rc
 	rc.exe /nologo /D "_UNICODE" /D "UNICODE" /fo$@ %s
 	
 $(BIND)\setdll$(BITS).exe : $(OBJD)\setdll.obj $(OBJD)\resource.res $(DEPS)
-    link /OUT:$@ $(OBJD)\setdll.obj $(OBJD)\resource.res $(LINKFLAGS) $(LIBS) /subsystem:console
+    link /OUT:$@ $(OBJD)\setdll.obj $(OBJD)\resource.res $(LINKFLAGS) $(LIBS)
 
 ################################################################# End of File.

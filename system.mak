@@ -93,6 +93,15 @@ DETOURS_OPTION_BITS=64
 
 ##############################################################################
 ##
+XPCFLAGS = /D "_USING_V110_SDK71_"
+XPLFALGS = /subsystem:console,5.01
+!IF "$(WINXP)" == "1"
+CFLAGS = $(CFLAGS) $(XPCFLAGS)
+LDFLAGS = $(LDFLAGS) $(XPLFALGS)
+!ENDIF
+
+##############################################################################
+##
 INCD = $(ROOT)\include
 BIND = $(ROOT)\Release
 OBJD = $(ROOT)\.dep

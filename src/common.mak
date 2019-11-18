@@ -16,7 +16,7 @@ CLIB=/MT
 !ENDIF
 
 AFLAGS=/nologo /Zi /c /Fl
-CFLAGS=/nologo /Zi $(CLIB) /Gm- /W4 /WX /O1 /utf-8
+CFLAGS=/nologo /Zi $(CLIB) /Gm- /W4 /WX /O1 /utf-8 $(CFLAGS)
 
 !IF $(DETOURS_SOURCE_BROWSING)==1
 CFLAGS=$(CFLAGS) /FR
@@ -25,7 +25,11 @@ CFLAGS=$(CFLAGS) /I$(INCD)
 !ENDIF
 
 LIBFLAGS=/nologo
-LINKFLAGS=/nologo /release /incremental:no /profile /nodefaultlib:oldnames.lib
+!IF "$(WINXP)" == "1"
+LINKFLAGS=/nologo /release /incremental:no /profile /nodefaultlib:oldnames.lib $(LDFLAGS)
+!ELSE
+LINKFLAGS=/nologo /release /incremental:no /profile /nodefaultlib:oldnames.lib /subsystem:console
+!ENDIF
 
 !if defined(DETOURS_WIN_7) && defined(DETOURS_CL_17_OR_NEWER)
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_

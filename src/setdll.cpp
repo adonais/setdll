@@ -590,6 +590,61 @@ Patched_File(LPCWSTR pfile)
 }
 //////////////////////////////////////////////////////////////////////////////
 //
+
+int __stdcall
+get_file_bits(const char* path)
+{
+    IMAGE_DOS_HEADER dos_header;
+    IMAGE_NT_HEADERS pe_header;
+    int  	ret = 1;
+    HANDLE	hFile = CreateFileA(path,GENERIC_READ,
+                                FILE_SHARE_READ,NULL,OPEN_EXISTING,
+                                FILE_ATTRIBUTE_NORMAL,NULL);
+    if( !is_valid_handle(hFile) )
+    {
+        return ret;
+    }
+    do
+    {
+        DWORD readed = 0;
+        DWORD m_ptr  = SetFilePointer( hFile,0,NULL,FILE_BEGIN );
+        if ( INVALID_SET_FILE_POINTER == m_ptr )
+        {
+            break;
+        }
+        ret = ReadFile( hFile,&dos_header,sizeof(IMAGE_DOS_HEADER),&readed,NULL );
+        if( ret && readed != sizeof(IMAGE_DOS_HEADER) && \
+            dos_header.e_magic != IMAGE_DOS_SIGNATURE )
+        {
+            break;
+        }
+        m_ptr = SetFilePointer( hFile,dos_header.e_lfanew,NULL,FILE_BEGIN );
+        if ( INVALID_SET_FILE_POINTER == m_ptr )
+        {
+            break;
+        }
+        ret = ReadFile( hFile,&pe_header,sizeof(IMAGE_NT_HEADERS),&readed,NULL );
+        if( ret && readed != sizeof(IMAGE_NT_HEADERS) )
+        {
+            break;
+        }
+        if (pe_header.FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
+        {
+            ret = 32;
+            break;
+        }
+        if (pe_header.FileHeader.Machine == IMAGE_FILE_MACHINE_IA64 ||
+            pe_header.FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
+        {
+            ret = 64;
+        }
+    } while (0);
+    CloseHandle(hFile);
+    return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
 static void
 PrintUsage(void)
 {
@@ -601,6 +656,7 @@ PrintUsage(void)
         "    /d:file.dll          : Add file.dll binary files\n"
         "    /r                   : Remove extra DLLs from binary files\n"
         "    /p:browser\\omni.ja   : Repair omni.ja to support Upcheck.exe\n"
+        "    /t:file.exe          : Test PE file bits\n"        
         "    /?                   : This help screen\n"
         "    -7 --help            : 7z command help screen\n";    
     char path[N_SIZE] = {0};
@@ -687,6 +743,41 @@ wmain(int argc, WCHAR **argv)
                             return 0;
                         }
                         return 1;
+                    }
+                    fNeedZip = FALSE;
+                    break;
+
+                case 't': // get PE file bits
+                case 'T':
+		            if (wcslen(argp) < 2)
+		            {
+		                fNeedHelp = TRUE;
+		                break;
+		            }                	
+                    if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
+                    {
+                        ;
+                    }
+                    else
+                    {
+                        StringCchPrintfW(w_szDllPath, MAX_PATH, L"%s", argp);
+                    }
+                    if (!WideCharToMultiByte(CP_UTF8, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
+                    {
+                        s_szDllPath[0] = 0;
+                    }
+                    if (strlen(s_szDllPath) > 1)
+                    {
+                        int bits = get_file_bits(s_szDllPath);
+                        if (bits == 32)
+                        {
+                            printf("PE32 executable (i386), for MS Windows\n");
+                        }
+                        else if (bits == 64)
+                        {
+                            printf("PE32+ executable (x86-64), for MS Windows\n");
+                        }                            
+                        return bits;
                     }
                     fNeedZip = FALSE;
                     break;

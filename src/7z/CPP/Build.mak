@@ -4,6 +4,12 @@ LIBS = $(LIBS) oleaut32.lib ole32.lib
 CFLAGS = $(CFLAGS) -DUNICODE -D_UNICODE
 !ENDIF
 
+XPCFLAGS = /D "_USING_V110_SDK71_"
+XPLFALGS = /subsystem:console,5.01
+!IF "$(WINXP)" == "1"
+CFLAGS = $(CFLAGS) $(XPCFLAGS)
+!ENDIF
+
 !IFNDEF O
 !IFDEF PLATFORM
 O=..\..\..\..\..\..\.dep

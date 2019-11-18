@@ -22,7 +22,9 @@ Options:
     /r                  :        Remove extra DLLs from binary files
     
     /p:browser\omni.ja  :        Repair omni.ja to support Upcheck.exe
-    
+
+    /t:file.exe         :        Test PE file bits
+        
     /?                  :        This help screen
     
     -7 --help           :        7z command help screen
