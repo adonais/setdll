@@ -592,12 +592,12 @@ Patched_File(LPCWSTR pfile)
 //
 
 int __stdcall
-get_file_bits(const char* path)
+get_file_bits(const wchar_t* path)
 {
     IMAGE_DOS_HEADER dos_header;
     IMAGE_NT_HEADERS pe_header;
     int  	ret = 1;
-    HANDLE	hFile = CreateFileA(path,GENERIC_READ,
+    HANDLE	hFile = CreateFileW(path,GENERIC_READ,
                                 FILE_SHARE_READ,NULL,OPEN_EXISTING,
                                 FILE_ATTRIBUTE_NORMAL,NULL);
     if( !is_valid_handle(hFile) )
@@ -707,7 +707,7 @@ wmain(int argc, WCHAR **argv)
                     {
                         StringCchPrintfW(w_szDllPath, MAX_PATH, L"%s", argp);
                     }
-                    if (!WideCharToMultiByte(CP_UTF8, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
+                    if (!WideCharToMultiByte(CP_ACP, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
                     {
                         s_szDllPath[0] = 0;
                     }
@@ -729,7 +729,7 @@ wmain(int argc, WCHAR **argv)
                     {
                         StringCchPrintfW(w_szDllPath, MAX_PATH, L"%s", argp);
                     }
-                    if (!WideCharToMultiByte(CP_UTF8, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
+                    if (!WideCharToMultiByte(CP_ACP, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
                     {
                         s_szDllPath[0] = 0;
                     }
@@ -762,13 +762,13 @@ wmain(int argc, WCHAR **argv)
                     {
                         StringCchPrintfW(w_szDllPath, MAX_PATH, L"%s", argp);
                     }
-                    if (!WideCharToMultiByte(CP_UTF8, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
+                    if (!WideCharToMultiByte(CP_ACP, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
                     {
                         s_szDllPath[0] = 0;
                     }
                     if (strlen(s_szDllPath) > 1)
                     {
-                        int bits = get_file_bits(s_szDllPath);
+                        int bits = get_file_bits(w_szDllPath);
                         if (bits == 32)
                         {
                             printf("PE32 executable (i386), for MS Windows\n");
