@@ -562,7 +562,7 @@ Patched_File(LPCWSTR pfile)
     {
         return FALSE;
     }
-    _snwprintf_s(aCmd, MAX_PATH, L"x -aoa -o%s %s", aPath, pfile);
+    _snwprintf_s(aCmd, MAX_PATH, L"x -aoa -o\"%s\" \"%s\"", aPath, pfile);
     if (exec_zmain1(aCmd) == -1)
     {
         printf("exec_zmain1 failed\n");
@@ -579,7 +579,7 @@ Patched_File(LPCWSTR pfile)
         printf("edit_files failed\n");
         return FALSE;
     }
-    _snwprintf_s(aCmd, MAX_PATH, L"a -tzip -mx=0 -mmt=4 %s %s", omni, L"*");
+    _snwprintf_s(aCmd, MAX_PATH, L"a -tzip -mx=0 -mmt=4 \"%s\" %s", omni, L"*");
     if (exec_zmain1(aCmd) != 0)
     {
         printf("compressed file failed\n");

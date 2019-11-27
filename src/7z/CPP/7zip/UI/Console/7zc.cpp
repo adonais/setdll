@@ -217,6 +217,7 @@ exec_zmain1(LPCWSTR str)
     fnSpinLock.lock();
     do 
     {
+		WCHAR process[MAX_PATH] = { 0 };
         len = wcslen(str);
         len += MAX_PATH;
         fnCommandLineToArgvW = (CommandLineToArgvWPtr) GetProcAddress(shell32, "CommandLineToArgvW");
@@ -229,12 +230,11 @@ exec_zmain1(LPCWSTR str)
         {
             break;
         }
-        if (!GetModuleFileNameW(NULL,lcmd,(DWORD)len))
+        if (!GetModuleFileNameW(NULL,process,MAX_PATH))
         {
             break;
         }
-        wcsncat(lcmd, L" ", len); 
-        wcsncat(lcmd, str, len);      
+		_snwprintf(lcmd, len, L"\"%s\" %s", process, str);
         args = fnCommandLineToArgvW((LPCWSTR)lcmd, &m_arg);
         if ( NULL != args )
         {
