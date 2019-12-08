@@ -374,7 +374,7 @@ edit_files(LPCWSTR lpath)
     process.init(exe);\n\
     process.startHidden = false;\n\
     process.noShell = true;\n\
-    process.run(false, [\"-i\", this.linkURL, \"-b\", cfile.path, \"-m\", \"1\"], 6);\n\
+    process.run(false, [\"-i\", this.linkURL, \"-b\", encodeURIComponent(cfile.path), \"-m\", \"1\"], 6);\n\
     }\n\
   },\n\n";
     LPCSTR xul_desc = "gContextMenu.saveLink();";
