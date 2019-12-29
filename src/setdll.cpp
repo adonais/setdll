@@ -289,6 +289,8 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
     long pos = 0;
     char buff[BUFFSIZE + 1] = { 0 };
     FILE *fp = NULL;
+    bool  comma = false;
+    bool js_file = strstr(path, "nsContextMenu.js") != NULL;
     if (FAILED(fopen_s(&fp, path, "rb+")))
     {
         printf("fopen_s %s false\n", path);
@@ -299,6 +301,16 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         if (strstr(buff, desc) != NULL)
         {
             pos = ftell(fp);
+            if (js_file)
+            {
+                /* 上一个函数块是否以逗号结尾 */
+                char str_t[MAX_PATH] = { 0 };
+                fseek(fp, -((long)strlen(buff)+8), SEEK_CUR);
+                if (fread(str_t, 8, 1, fp) > 0)
+                {
+                    comma = strstr(str_t, "},") != NULL;
+                }                
+            }
             if (back)
             {
                 pos -= (long) strlen(buff);
@@ -341,6 +353,19 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         }
         fseek(fp, pos, SEEK_SET);
         fwrite(con, strlen(con), 1, fp);
+        if (js_file)
+        {
+            if (comma)
+            {
+                /* downloandlink函数添加逗号 */
+                fwrite(",\n\n", 3, 1, fp);
+            }
+            else
+            {
+                /* 最新版的js没有逗号 */
+                fwrite("\n\n", 2, 1, fp);
+            }
+        }
         fwrite(backup, offset, 1, fp);
         free(next);
         free(backup);
@@ -376,7 +401,7 @@ edit_files(LPCWSTR lpath)
     process.noShell = true;\n\
     process.run(false, [\"-i\", this.linkURL, \"-b\", encodeURIComponent(cfile.path), \"-m\", \"1\"], 6);\n\
     }\n\
-  },\n\n";
+  }";
     LPCSTR xul_desc = "gContextMenu.saveLink();";
     LPCSTR xul_inst =
         "\
