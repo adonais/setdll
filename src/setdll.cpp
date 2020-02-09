@@ -382,9 +382,15 @@ edit_files(LPCWSTR lpath)
     char f_dtd[MAX_PATH + 1] = { 0 };
     char f_js[MAX_PATH + 1] = { 0 };
     char path[MAX_PATH + 1] = { 0 };
-    LPCSTR js_desc1 = "this.onSaveableLink || this.onPlainTextLink);";
+    LPCSTR js_desc1 = "this.showItem(\"context-savepage\", shouldShow);";
     LPCSTR js_desc2 = "Backwards-compatibility wrapper";
-    LPCSTR js_inst1 = "    this.showItem(\"context-downloadlink\", this.onSaveableLink || this.onPlainTextLink);";
+    LPCSTR js_inst1 =
+        "\n\
+    // hack by adonais\n\
+    this.showItem(\n\
+      \"context-downloadlink\",\n\
+      this.onSaveableLink || this.onPlainTextLink\n\
+    );";
     LPCSTR js_inst2 =
         "\
   downloadLink() {\n\
