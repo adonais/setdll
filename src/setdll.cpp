@@ -50,7 +50,7 @@ static PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
 VOID
 AssertMessage(PCSTR szMsg, PCSTR szFile, DWORD nLine)
 {
-    printf("ASSERT(%s) failed in %s, line %d.", szMsg, szFile, nLine);
+    printf("ASSERT(%s) failed in %s, line %lu.", szMsg, szFile, nLine);
 }
 
 #define ASSERT(x)                                  \
@@ -95,7 +95,7 @@ DoesDllExportOrdinal1(PCHAR pszDllPath)
     HMODULE hDll = LoadLibraryExA(pszDllPath, NULL, DONT_RESOLVE_DLL_REFERENCES);
     if (hDll == NULL)
     {
-        printf("setdll.exe: LoadLibraryEx(%s) failed with error %d.\n", pszDllPath, GetLastError());
+        printf("setdll.exe: LoadLibraryEx(%s) failed with error %lu.\n", pszDllPath, GetLastError());
         return FALSE;
     }
 
@@ -165,7 +165,7 @@ SetFile(LPWSTR pszPath)
 
     if (hOld == INVALID_HANDLE_VALUE)
     {
-        printf("Couldn't open input file: %ls, error: %d\n", szOrg, GetLastError());
+        printf("Couldn't open input file: %ls, error: %lu\n", szOrg, GetLastError());
         bGood = FALSE;
         goto end;
     }
@@ -173,14 +173,14 @@ SetFile(LPWSTR pszPath)
     hNew = CreateFileW(szNew, GENERIC_WRITE | GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hNew == INVALID_HANDLE_VALUE)
     {
-        printf("Couldn't open output file: %ls, error: %d\n", szNew, GetLastError());
+        printf("Couldn't open output file: %ls, error: %lu\n", szNew, GetLastError());
         bGood = FALSE;
         goto end;
     }
 
     if ((pBinary = DetourBinaryOpen(hOld)) == NULL)
     {
-        printf("DetourBinaryOpen failed: %d\n", GetLastError());
+        printf("DetourBinaryOpen failed: %lu\n", GetLastError());
         goto end;
     }
 
@@ -199,19 +199,19 @@ SetFile(LPWSTR pszPath)
         {
             if (!DetourBinaryEditImports(pBinary, &bAddedDll, AddBywayCallback, NULL, NULL, NULL))
             {
-                printf("DetourBinaryEditImports failed: %d\n", GetLastError());
+                printf("DetourBinaryEditImports failed: %lu\n", GetLastError());
             }
         }
 
         if (!DetourBinaryEditImports(pBinary, NULL, ListBywayCallback, ListFileCallback, NULL, NULL))
         {
 
-            printf("DetourBinaryEditImports failed: %d\n", GetLastError());
+            printf("DetourBinaryEditImports failed: %lu\n", GetLastError());
         }
 
         if (!DetourBinaryWrite(pBinary, hNew))
         {
-            printf("DetourBinaryWrite failed: %d\n", GetLastError());
+            printf("DetourBinaryWrite failed: %lu\n", GetLastError());
             bGood = FALSE;
         }
 
@@ -231,13 +231,13 @@ SetFile(LPWSTR pszPath)
                 DWORD dwError = GetLastError();
                 if (dwError != ERROR_FILE_NOT_FOUND)
                 {
-                    printf("Warning: Couldn't delete %ls: %d\n", szOld, dwError);
+                    printf("Warning: Couldn't delete %ls: %lu\n", szOld, dwError);
                     bGood = FALSE;
                 }
             }
             if (!MoveFileExW(szNew, szOrg, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
             {
-                printf("Error: Couldn't install %ls as %ls: %d\n", szNew, szOrg, GetLastError());
+                printf("Error: Couldn't install %ls as %ls: %lu\n", szNew, szOrg, GetLastError());
                 bGood = FALSE;
             }
         }
@@ -324,7 +324,7 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         fseek(fp, 0, SEEK_END);
         long len = ftell(fp);
         len -= pos;
-        printf("len = %d\n", len);
+        printf("len = %lu\n", len);
         fseek(fp, pos, SEEK_SET);
         char *next = (char *) calloc(len, sizeof(char));
         if (!next)
@@ -696,7 +696,7 @@ PrintUsage(void)
     if (s_help  && get_process_name(path, N_SIZE))
     {
         sprintf_s(s_help, len, k_help, path);
-        printf(s_help);
+        printf("%s", s_help);
 		free(s_help);
     }    
     #undef N_SIZE

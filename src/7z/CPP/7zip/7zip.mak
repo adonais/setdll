@@ -31,7 +31,9 @@ OBJS = \
 
 !include "../../../Build.mak"
 
-# MAK_SINGLE_FILE = 1
+!IF "$(COMPILER_CLANG)" == "1"
+MAK_SINGLE_FILE = 1
+!ENDIF
 
 !IFDEF MAK_SINGLE_FILE
 
@@ -128,12 +130,12 @@ $(ZIP_OBJS): ../../Archive/Zip/$(*B).cpp
 
 !IFDEF COMPRESS_OBJS
 $(COMPRESS_OBJS): ../../Compress/$(*B).cpp
-	$(COMPL_O2)
+	$(COMPL)
 !ENDIF
 
 !IFDEF CRYPTO_OBJS
 $(CRYPTO_OBJS): ../../Crypto/$(*B).cpp
-	$(COMPL_O2)
+	$(COMPL)
 !ENDIF
 
 !IFDEF UI_COMMON_OBJS
@@ -168,7 +170,7 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 
 !IFDEF C_OBJS
 $(C_OBJS): ../../../../C/$(*B).c
-	$(COMPL_O2)
+	$(COMPL)
 !ENDIF
 
 
@@ -228,9 +230,9 @@ $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPLB)
 
 {../../Compress}.cpp{$O}.obj::
-	$(COMPLB_O2)
+	$(COMPLB)
 {../../Crypto}.cpp{$O}.obj::
-	$(COMPLB_O2)
+	$(COMPLB)
 {../../../../C}.c{$O}.obj::
 	$(CCOMPLB)
 

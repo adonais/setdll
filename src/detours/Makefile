@@ -9,30 +9,9 @@
 
 ROOT = ..\..
 !include "$(ROOT)\system.mak"
-
-!IF "$(DETOURS_SOURCE_BROWSING)" == ""
-DETOURS_SOURCE_BROWSING = 0
-!ENDIF
-
 #######################/#######################################################
 ##
-CFLAGS=/nologo /W4 /WX /Zi /MT /Gy /Gm- /Zl /Od /utf-8 $(CFLAGS) 
-
-!IF $(DETOURS_SOURCE_BROWSING)==1
-CFLAGS=$(CFLAGS) /FR
-!ELSE
-CFLAGS=$(CFLAGS) /DWIN32_LEAN_AND_MEAN /D_WIN32_WINNT=0x501
-!ENDIF
-
-!IF "$(DETOURS_TARGET_PROCESSOR)" == "IA64"
-CFLAGS=$(CFLAGS) /wd4163 # intrinsic rdtebex not available; using newer Windows headers with older compiler
-!ENDIF
-
-!if defined(DETOURS_WIN_7) && defined(DETOURS_CL_17_OR_NEWER)
-CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
-!elseif defined(DETOURS_ANALYZE)
-CFLAGS=$(CFLAGS) /analyze
-!endif
+CFLAGS=/nologo /W4 /WX /Zi /MT /Gy /Zl /Od /utf-8 $(CFLAGS) 
 
 OBJS = \
     $(OBJD)\detours.obj     \
@@ -63,7 +42,7 @@ all: dirs \
 ##############################################################################
 
 clean:
-    -rmdir /q /s $(OBJDS) 2>nul
+    -del /q /s $(OBJS) $(BIND)\detours.lib $(BIND)\detours.pdb 2>nul
 
 ##############################################################################
 
@@ -73,7 +52,7 @@ dirs:
     @if not exist "$(OBJD)" mkdir "$(OBJD)" && echo.   Created $(OBJD)
 
 $(BIND)\detours.lib : $(OBJS)
-    link /lib /out:$@ $(OBJS)
+    $(AR) /out:$@ $(OBJS)
 
 $(INCD)\detours.h : detours.h
     @copy detours.h $@ /y

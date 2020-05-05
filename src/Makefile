@@ -2,9 +2,16 @@
 ##
 
 ROOT=..
-!include .\common.mak
+!include "$(ROOT)\system.mak"
+##############################################################################
 
-LIBS=$(LIBS) kernel32.lib oleaut32.lib user32.lib advapi32.lib
+AFLAGS=/nologo /Zi /c /Fl
+CFLAGS=/nologo /Zi $(CLIB) /W4 /WX /O1 /utf-8 $(CFLAGS)
+LDFLAGS = /nologo /incremental:no /profile /nodefaultlib:oldnames.lib $(LDFLAGS)
+LIBS=$(LIBS) kernel32.lib oleaut32.lib user32.lib advapi32.lib oleaut32.lib ole32.lib
+
+DEPS = $(BIND)\detours.lib $(BIND)\7z.lib
+LIBS = $(BIND)\detours.lib /WHOLEARCHIVE:$(BIND)\7z.lib $(LIBS)
 
 .cpp{$(OBJD)}.obj:
     $(CC) $(CFLAGS) /Fd$(OBJD)\setdll$(BITS).pdb /Fo$(OBJD)\ /c $<
@@ -26,9 +33,9 @@ dirs:
 $(OBJD)\setdll.obj : setdll.cpp
 
 $(OBJD)\resource.res : resource.rc
-	rc.exe /nologo /D "_UNICODE" /D "UNICODE" /fo$@ %s
+	$(RC) /nologo /D "_UNICODE" /D "UNICODE" /fo$@ %s
 	
 $(BIND)\setdll$(BITS).exe : $(OBJD)\setdll.obj $(OBJD)\resource.res $(DEPS)
-    link /OUT:$@ $(OBJD)\setdll.obj $(OBJD)\resource.res $(LINKFLAGS) $(LIBS)
+    $(LD) /OUT:$@ $(OBJD)\setdll.obj $(OBJD)\resource.res $(LDFLAGS) $(LIBS)
 
 ################################################################# End of File.

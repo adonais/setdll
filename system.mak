@@ -95,11 +95,62 @@ DETOURS_OPTION_BITS=64
 ##
 XPCFLAGS = /D "_USING_V110_SDK71_"
 XPLFALGS = /subsystem:console,5.01
+
 !IF "$(WINXP)" == "1"
 CFLAGS = $(CFLAGS) $(XPCFLAGS)
 LDFLAGS = $(LDFLAGS) $(XPLFALGS)
 !ENDIF
 
+!IF "$(DETOURS_SOURCE_BROWSING)" == ""
+DETOURS_SOURCE_BROWSING=0
+!ENDIF
+
+!IF $(DETOURS_SOURCE_BROWSING)==1
+CFLAGS=$(CFLAGS) /FR
+!ELSE
+CFLAGS=$(CFLAGS) /I$(INCD)
+!ENDIF
+
+!IF "$(DETOURS_TARGET_PROCESSOR)" == "X86"
+BITS=32
+ASM=ml -WX -safeseh
+!ELSEIF "$(DETOURS_TARGET_PROCESSOR)" == "X64"
+BITS=64
+ASM=ml64 -Dx64 -WX
+!ELSEIF "$(DETOURS_TARGET_PROCESSOR)" == "IA64"
+ASM=ias
+AFLAGS=-F COFF32_PLUS
+CFLAGS=$(CFLAGS) /wd4163 # intrinsic rdtebex not available; using newer Windows headers with older compiler
+#CFLAGS=$(CFLAGS) /wd4996 /wd4068
+!ELSEIF "$(DETOURS_TARGET_PROCESSOR)" == "ARM"
+ASM=armasm -WX
+AFLAGS=-coff_thumb2_only
+CFLAGS=$(CFLAGS) /D_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE
+CFLAGS=$(CFLAGS) /D_$(DETOURS_TARGET_PROCESSOR:X64=AMD64)_ # redundant with windows.h except for midl proxies
+!ENDIF
+
+!IF "$(CC)" == "cl"
+AR   = lib /nologo 
+LD   = link /nologo /release
+CFLAGS = $(CFLAGS) /Gm- /W4 /WX
+COMPILER_MSVC=1
+!ELSEIF "$(CC)" == "clang-cl"
+AR   = llvm-lib /nologo /llvmlibthin
+LD   = lld-link /nologo
+CFLAGS   = -flto=thin $(CFLAGS) -Wno-unused-variable -Wno-unused-function \
+           -Wno-implicit-int-float-conversion -Wno-incompatible-pointer-types \
+           -D_CRT_SECURE_NO_WARNINGS
+COMPILER_CLANG=1
+!IF "$(BITS)" == "32"
+CFLAGS   = --target=i686-pc-windows-msvc $(CFLAGS) 
+!ENDIF
+!ELSE
+!ERROR Unknown compiler
+!ENDIF
+
+!IFNDEF MY_NO_UNICODE
+CFLAGS = $(CFLAGS) /D_UNICODE /DUNICODE
+!ENDIF
 ##############################################################################
 ##
 INCD = $(ROOT)\include

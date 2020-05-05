@@ -139,12 +139,14 @@ PDETOUR_SYM_INFO DetourLoadImageHlp(VOID)
     return pSymInfo;
 }
 
-PVOID WINAPI DetourFindFunction(_In_ PCSTR pszModule,
-                                _In_ PCSTR pszFunction)
+PVOID WINAPI DetourFindFunction(_In_ LPCSTR pszModule,
+                                _In_ LPCSTR pszFunction)
 {
     /////////////////////////////////////////////// First, try GetProcAddress.
     //
+#if defined(_MSC_VER) && !defined(__clang__)
 #pragma prefast(suppress:28752, "We don't do the unicode conversion for LoadLibraryExA.")
+#endif
     HMODULE hModule = LoadLibraryExA(pszModule, NULL, 0);
     if (hModule == NULL) {
         return NULL;
@@ -279,7 +281,9 @@ HMODULE WINAPI DetourEnumerateModules(_In_opt_ HMODULE hModuleLast)
 
             return (HMODULE)pDosHeader;
         }
+#if defined(_MSC_VER) && !defined(__clang__)
 #pragma prefast(suppress:28940, "A bad pointer means this probably isn't a PE header.")
+#endif
         __except(GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ?
                  EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
             continue;
@@ -340,7 +344,7 @@ PVOID WINAPI DetourGetEntryPoint(_In_opt_ HMODULE hModule)
             }
 
             SetLastError(NO_ERROR);
-            return GetProcAddress(hClr, "_CorExeMain");
+            return (PVOID)GetProcAddress(hClr, "_CorExeMain");
         }
 
         SetLastError(NO_ERROR);
