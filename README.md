@@ -6,12 +6,12 @@ Microsoft Visual Studio 2013 or above .
 
 ## build
 
-nmake clean 
+nmake clean    
 nmake 
 
 or
 
-nmake CC=clang-cl clean 
+nmake CC=clang-cl clean  
 nmake CC=clang-cl 
 
 ## About setdll
