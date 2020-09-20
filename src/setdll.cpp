@@ -371,7 +371,7 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         free(backup);
     }
     fclose(fp);
-    return TRUE;
+    return (pos > 0);
 }
 
 static BOOL
@@ -412,23 +412,21 @@ edit_files(LPCWSTR lpath)
     LPCSTR xul_inst =
         "\
       <menuitem id=\"context-downloadlink\"\n\
-                label=\"&downloadLinkCmd.label;\"\n\
-                accesskey=\"&downloadLinkCmd.accesskey;\"\n\
+                data-l10n-id=\"main-context-menu-download-link\"\n\
                 oncommand=\"gContextMenu.downloadLink();\"/>\n";
-    LPCSTR dtd_desc = "saveLinkCmd.accesskey";
+    LPCSTR dtd_desc = "## are mutually exclusive.";
     LPCSTR dtd_inst1 =
         "\
-<!ENTITY downloadLinkCmd.label        \"使用 Upcheck 下载此链接\">\n\
-<!ENTITY downloadLinkCmd.accesskey    \"\">\n";
+main-context-menu-download-link = \n\
+    .label = 使用Upcheck下载此链接\n";
     LPCSTR dtd_inst2 =
         "\
-<!ENTITY downloadLinkCmd.label        \"Download Link With Upcheck\">\n\
-<!ENTITY downloadLinkCmd.accesskey    \"\">\n";
-    LPCSTR file0 = "chrome\\browser\\content\\browser\\browser.xhtml";
-    LPCSTR file1 = "chrome\\browser\\content\\browser\\browser.xul";
+main-context-menu-download-link = \n\
+    .label = Download Link With Upcheck\n";
+    LPCSTR file1 = "chrome\\browser\\content\\browser\\browser.xhtml";
     LPCSTR file2 = "chrome\\browser\\content\\browser\\nsContextMenu.js";
-    LPCSTR file3 = "chrome\\zh-CN\\locale\\browser\\browser.dtd";
-    LPCSTR file4 = "chrome\\en-US\\locale\\browser\\browser.dtd";
+    LPCSTR file3 = "localization\\zh-CN\\browser\\browserContext.ftl";
+    LPCSTR file4 = "localization\\en-US\\browser\\browserContext.ftl";
     if (!lpath)
     {
         printf("lpath is null\n");
@@ -451,10 +449,6 @@ edit_files(LPCWSTR lpath)
     }
     _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file1);
     _snprintf_s(f_js, MAX_PATH, "%s\\%s", path, file2);
-    if (!fnPathFileExistsA(f_xul))
-    {
-        _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file0);
-    }    
     if (!(fnPathFileExistsA(f_xul) && fnPathFileExistsA(f_js)))
     {
         printf("file not exist\n");
@@ -472,22 +466,22 @@ edit_files(LPCWSTR lpath)
     }
     if (!fixed_file(f_xul, xul_desc, xul_inst, FALSE))
     {
-        printf("fixed_file xul_desc return false\n");
+        printf("fixed_file f_xul return false\n");
         return FALSE;
     }
     if (cn)
-    {
+    {             
         if (!fixed_file(f_dtd, dtd_desc, dtd_inst1, FALSE))
         {
-            printf("fixed_file dtd_inst1 return false\n");
+            printf("fixed_file ftl_inst1 return false\n");
             return FALSE;
         }
     }
     else
-    {
+    { 
         if (!fixed_file(f_dtd, dtd_desc, dtd_inst2, FALSE))
         {
-            printf("fixed_file dtd_inst2 return false\n");
+            printf("fixed_file ftl_inst1 return false\n");
             return FALSE;
         }
     }
