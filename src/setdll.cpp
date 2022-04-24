@@ -414,7 +414,7 @@ edit_files(LPCWSTR lpath)
       <menuitem id=\"context-downloadlink\"\n\
                 data-l10n-id=\"main-context-menu-download-link\"\n\
                 oncommand=\"gContextMenu.downloadLink();\"/>\n";
-    LPCSTR dtd_desc = "## are mutually exclusive.";
+    LPCSTR dtd_desc = "main-context-menu-copy-email";
     LPCSTR dtd_inst1 =
         "\
 main-context-menu-download-link = \n\
@@ -471,7 +471,7 @@ main-context-menu-download-link = \n\
     }
     if (cn)
     {             
-        if (!fixed_file(f_dtd, dtd_desc, dtd_inst1, FALSE))
+        if (!fixed_file(f_dtd, dtd_desc, dtd_inst1, TRUE))
         {
             printf("fixed_file ftl_inst1 return false\n");
             return FALSE;
@@ -479,7 +479,7 @@ main-context-menu-download-link = \n\
     }
     else
     { 
-        if (!fixed_file(f_dtd, dtd_desc, dtd_inst2, FALSE))
+        if (!fixed_file(f_dtd, dtd_desc, dtd_inst2, TRUE))
         {
             printf("fixed_file ftl_inst1 return false\n");
             return FALSE;
