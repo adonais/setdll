@@ -36,11 +36,9 @@
 #define is_valid_handle(x) (x != NULL && x != INVALID_HANDLE_VALUE)
 
 typedef int(WINAPI *SHFileOperationWPtr)(LPSHFILEOPSTRUCTW lpFileOp);
-typedef BOOL(WINAPI *PathFileExistsAPtr)(LPCSTR pszPath);
 typedef BOOL(WINAPI *PathFileExistsWPtr)(LPCWSTR pszPath);
 typedef BOOL(WINAPI *PathAppendWPtr)(LPWSTR pszPath, LPCWSTR pszMore);
 typedef BOOL(WINAPI *PathRemoveFileSpecWPtr)(LPWSTR pszPath);
-static PathFileExistsAPtr fnPathFileExistsA;
 static PathFileExistsWPtr fnPathFileExistsW;
 static PathAppendWPtr fnPathAppendW;
 static PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
@@ -270,17 +268,29 @@ init_shinfo(void)
     HMODULE shlwapi = LoadLibraryW(L"shlwapi.dll");
     if (shlwapi != NULL)
     {
-        fnPathFileExistsA = (PathFileExistsAPtr) GetProcAddress(shlwapi, "PathFileExistsA");
         fnPathFileExistsW = (PathFileExistsWPtr) GetProcAddress(shlwapi, "PathFileExistsW");
         fnPathAppendW = (PathAppendWPtr) GetProcAddress(shlwapi, "PathAppendW");
         fnPathRemoveFileSpecW = (PathRemoveFileSpecWPtr) GetProcAddress(shlwapi, "PathRemoveFileSpecW");
-        if (!(fnPathFileExistsA && fnPathFileExistsW && fnPathAppendW && fnPathRemoveFileSpecW))
+        if (!(fnPathFileExistsW && fnPathAppendW && fnPathRemoveFileSpecW))
         {
             FreeLibrary(shlwapi);
             shlwapi = NULL;
         }
     }
     return shlwapi;
+}
+
+static bool
+lookup_file_exist(const char *path)
+{
+    DWORD attrs = (DWORD)-1;
+    TCHAR wide_dir[MAX_PATH+1] = {0};
+    int m = MultiByteToWideChar(CP_UTF8, 0, path, -1, wide_dir, MAX_PATH);
+    if (m > 0 && m < MAX_PATH)
+    {
+        attrs = GetFileAttributes(wide_dir);
+    }
+    return (INVALID_FILE_ATTRIBUTES != attrs && !(FILE_ATTRIBUTE_DIRECTORY & attrs));
 }
 
 static BOOL
@@ -403,7 +413,7 @@ edit_files(LPCWSTR lpath)
     let process = Cc[\"@mozilla.org/process/util;1\"]\n\
                     .createInstance(Ci.nsIProcess);\n\
     process.init(exe);\n\
-    process.startHidden = false;\n\
+    process.startHidden = true;\n\
     process.noShell = true;\n\
     process.run(false, [\"-i\", this.linkURL, \"-b\", encodeURIComponent(cfile.path), \"-m\", \"1\"], 6);\n\
     }\n\
@@ -438,18 +448,18 @@ main-context-menu-download-link = \n\
         return FALSE;
     }
     _snprintf_s(f_dtd, MAX_PATH, "%s\\%s", path, file3);
-    cn = fnPathFileExistsA(f_dtd);
+    cn = lookup_file_exist(f_dtd);
     if (!cn)
     {
         _snprintf_s(f_dtd, MAX_PATH, "%s\\%s", path, file4);
-        if (!fnPathFileExistsA(f_dtd))
+        if (!lookup_file_exist(f_dtd))
         {
             return FALSE;
         }
     }
     _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file1);
     _snprintf_s(f_js, MAX_PATH, "%s\\%s", path, file2);
-    if (!(fnPathFileExistsA(f_xul) && fnPathFileExistsA(f_js)))
+    if (!(lookup_file_exist(f_xul) && lookup_file_exist(f_js)))
     {
         printf("file not exist\n");
         return FALSE;
