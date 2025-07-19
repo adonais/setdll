@@ -34,6 +34,7 @@
 #define LEN_NAME 6
 #define UNUSED(c) (c) = (c)
 #define is_valid_handle(x) (x != NULL && x != INVALID_HANDLE_VALUE)
+#define STR_IS_NUL(s) (s == NULL || *s == 0)
 
 typedef int(WINAPI *SHFileOperationWPtr)(LPSHFILEOPSTRUCTW lpFileOp);
 typedef BOOL(WINAPI *PathFileExistsWPtr)(LPCWSTR pszPath);
@@ -281,29 +282,23 @@ init_shinfo(void)
 }
 
 static bool
-lookup_file_exist(const char *path)
+lookup_file_exist(const WCHAR *wide_dir)
 {
-    DWORD attrs = (DWORD)-1;
-    TCHAR wide_dir[MAX_PATH+1] = {0};
-    int m = MultiByteToWideChar(CP_UTF8, 0, path, -1, wide_dir, MAX_PATH);
-    if (m > 0 && m < MAX_PATH)
-    {
-        attrs = GetFileAttributes(wide_dir);
-    }
+    const DWORD attrs = GetFileAttributes(wide_dir);
     return (INVALID_FILE_ATTRIBUTES != attrs && !(FILE_ATTRIBUTE_DIRECTORY & attrs));
 }
 
 static BOOL
-fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
+fixed_file(LPCWSTR path, LPCSTR desc, LPCSTR con, BOOL back)
 {
     long pos = 0;
     char buff[BUFFSIZE + 1] = { 0 };
     FILE *fp = NULL;
     bool  comma = false;
-    bool js_file = strstr(path, "nsContextMenu.js") != NULL;
-    if (FAILED(fopen_s(&fp, path, "rb+")))
+    bool js_file = wcsstr(path, L"nsContextMenu.") != NULL;
+    if (FAILED(_wfopen_s(&fp, path, L"rb+")))
     {
-        printf("fopen_s %s false\n", path);
+        printf("fopen_s %ls false\n", path);
         return FALSE;
     }
     while (fgets(buff, BUFFSIZE, fp) != NULL)
@@ -385,13 +380,14 @@ fixed_file(LPCSTR path, LPCSTR desc, LPCSTR con, BOOL back)
 }
 
 static BOOL
-edit_files(LPCWSTR lpath)
+edit_files(LPCWSTR path)
 {
     BOOL cn = FALSE;
-    char f_xul[MAX_PATH + 1] = { 0 };
-    char f_dtd[MAX_PATH + 1] = { 0 };
-    char f_js[MAX_PATH + 1] = { 0 };
-    char path[MAX_PATH + 1] = { 0 };
+    BOOL late128 = FALSE;
+    WCHAR f_xul[MAX_PATH + 1] = { 0 };
+    WCHAR f_dtd[MAX_PATH + 1] = { 0 };
+    WCHAR f_js[MAX_PATH + 1] = { 0 };
+    WCHAR f_context[MAX_PATH + 1] = { 0 };
     LPCSTR js_desc1 = "this.showItem(\"context-savepage\", shouldShow);";
     LPCSTR js_desc2 = "Backwards-compatibility wrapper";
     LPCSTR js_inst1 =
@@ -424,6 +420,19 @@ edit_files(LPCWSTR lpath)
       <menuitem id=\"context-downloadlink\"\n\
                 data-l10n-id=\"main-context-menu-download-link\"\n\
                 oncommand=\"gContextMenu.downloadLink();\"/>\n";
+    LPCSTR xul_desc1 = "data-l10n-id=\"main-context-menu-save-link\"";
+    LPCSTR xul_inst1 =
+        "\
+                />\n\
+      <menuitem id=\"context-downloadlink\"\n\
+                data-l10n-id=\"main-context-menu-download-link\"\n";
+    LPCSTR context_desc1 = "case \"context-savelinktopocket\":";
+    LPCSTR context_desc2 = "case \"context-copyemail\":";
+    LPCSTR context_inst1 =
+        "\
+        case \"context-downloadlink\":\n\
+          gContextMenu.downloadLink();\n\
+          break;\n";
     LPCSTR dtd_desc = "main-context-menu-copy-email";
     LPCSTR dtd_inst1 =
         "\
@@ -433,32 +442,31 @@ main-context-menu-download-link = \n\
         "\
 main-context-menu-download-link = \n\
     .label = Download Link With Upcheck\n";
-    LPCSTR file1 = "chrome\\browser\\content\\browser\\browser.xhtml";
-    LPCSTR file2 = "chrome\\browser\\content\\browser\\nsContextMenu.js";
-    LPCSTR file3 = "localization\\zh-CN\\browser\\browserContext.ftl";
-    LPCSTR file4 = "localization\\en-US\\browser\\browserContext.ftl";
-    if (!lpath)
+    LPCWSTR file1 = L"chrome\\browser\\content\\browser\\browser.xhtml";
+    LPCWSTR file2 = L"chrome\\browser\\content\\browser\\nsContextMenu.js";
+    LPCWSTR file3 = L"localization\\zh-CN\\browser\\browserContext.ftl";
+    LPCWSTR file4 = L"localization\\en-US\\browser\\browserContext.ftl";
+    LPCWSTR file5 = L"chrome\\browser\\content\\browser\\nsContextMenu.sys.mjs";
+    LPCWSTR file6 = L"chrome\\browser\\content\\browser\\browser-context.js";
+    if (STR_IS_NUL(path))
     {
         printf("lpath is null\n");
         return FALSE;
     }
-    if (!WideCharToMultiByte(CP_UTF8, 0, lpath, -1, path, sizeof(path), NULL, NULL))
-    {
-        printf("WideCharToMultiByte path return false\n");
-        return FALSE;
-    }
-    _snprintf_s(f_dtd, MAX_PATH, "%s\\%s", path, file3);
+    _snwprintf_s(f_dtd, MAX_PATH, L"%s\\%s", path, file3);
+    _snwprintf_s(f_context, MAX_PATH, L"%s\\%s", path, file6);
     cn = lookup_file_exist(f_dtd);
+    late128 = lookup_file_exist(f_context);
     if (!cn)
     {
-        _snprintf_s(f_dtd, MAX_PATH, "%s\\%s", path, file4);
+        _snwprintf_s(f_dtd, MAX_PATH, L"%s\\%s", path, file4);
         if (!lookup_file_exist(f_dtd))
         {
             return FALSE;
         }
     }
-    _snprintf_s(f_xul, MAX_PATH, "%s\\%s", path, file1);
-    _snprintf_s(f_js, MAX_PATH, "%s\\%s", path, file2);
+    _snwprintf_s(f_xul, MAX_PATH, L"%s\\%s", path, file1);
+    _snwprintf_s(f_js, MAX_PATH, L"%s\\%s", path, late128 ? file5 : file2);
     if (!(lookup_file_exist(f_xul) && lookup_file_exist(f_js)))
     {
         printf("file not exist\n");
@@ -474,10 +482,18 @@ main-context-menu-download-link = \n\
         printf("fixed_file js_desc2 return false\n");
         return FALSE;
     }
-    if (!fixed_file(f_xul, xul_desc, xul_inst, FALSE))
+    if (!fixed_file(f_xul, late128 ? xul_desc1 : xul_desc, late128 ? xul_inst1 : xul_inst, FALSE))
     {
         printf("fixed_file f_xul return false\n");
         return FALSE;
+    }
+    if (late128)
+    {
+        if (!(fixed_file(f_context, context_desc1, context_inst1, TRUE) || fixed_file(f_context, context_desc2, context_inst1, TRUE)))
+        {
+            printf("fixed_file context_desc return false\n");
+            return FALSE;
+        }
     }
     if (cn)
     {             
