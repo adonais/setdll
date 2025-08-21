@@ -11,7 +11,7 @@ ROOT = ..\..
 !include "$(ROOT)\system.mak"
 #######################/#######################################################
 ##
-CFLAGS=/nologo /W4 /WX /Zi /MT /Gy /Zl /Od /utf-8 $(CFLAGS) 
+CFLAGS=/nologo /W4 /WX /Zi /MT /Gy /Zl /Od /utf-8 $(CFLAGS) -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
 
 OBJS = \
     $(OBJD)\detours.obj     \

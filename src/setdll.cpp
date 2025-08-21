@@ -44,29 +44,10 @@ static PathFileExistsWPtr fnPathFileExistsW;
 static PathAppendWPtr fnPathAppendW;
 static PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
 
-////////////////////////////////////////////////////////////// Error Messages.
-//
-VOID
-AssertMessage(PCSTR szMsg, PCSTR szFile, DWORD nLine)
-{
-    printf("ASSERT(%s) failed in %s, line %lu.", szMsg, szFile, nLine);
-}
-
-#define ASSERT(x)                                  \
-    do                                             \
-    {                                              \
-        if (!(x))                                  \
-        {                                          \
-            AssertMessage(#x, __FILE__, __LINE__); \
-            DebugBreak();                          \
-        }                                          \
-    } while (0)
-;
-
 //////////////////////////////////////////////////////////////////////////////
 //
 static BOOLEAN s_fRemove = FALSE;
-static CHAR s_szDllPath[MAX_PATH] = "";
+static CHAR s_szDllPath[MAX_PATH] = {0};
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -281,7 +262,7 @@ init_shinfo(void)
     return shlwapi;
 }
 
-static bool
+static BOOL
 lookup_file_exist(const WCHAR *wide_dir)
 {
     const DWORD attrs = GetFileAttributes(wide_dir);
@@ -294,8 +275,8 @@ fixed_file(LPCWSTR path, LPCSTR desc, LPCSTR con, BOOL back)
     long pos = 0;
     char buff[BUFFSIZE + 1] = { 0 };
     FILE *fp = NULL;
-    bool  comma = false;
-    bool js_file = wcsstr(path, L"nsContextMenu.") != NULL;
+    BOOL  comma = FALSE;
+    BOOL js_file = wcsstr(path, L"nsContextMenu.") != NULL;
     if (FAILED(_wfopen_s(&fp, path, L"rb+")))
     {
         printf("fopen_s %ls false\n", path);
@@ -329,7 +310,7 @@ fixed_file(LPCWSTR path, LPCSTR desc, LPCSTR con, BOOL back)
         fseek(fp, 0, SEEK_END);
         long len = ftell(fp);
         len -= pos;
-        printf("len = %lu\n", len);
+        // printf("len = %lu\n", len);
         fseek(fp, pos, SEEK_SET);
         char *next = (char *) calloc(len, sizeof(char));
         if (!next)

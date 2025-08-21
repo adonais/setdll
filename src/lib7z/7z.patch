@@ -1,0 +1,1181 @@
+diff -uNra lib7z_orig/C/7zc.h lib7z/C/7zc.h
+--- lib7z_orig/C/7zc.h	1970-01-01 08:00:00.000000000 +0800
++++ lib7z/C/7zc.h	2025-08-20 21:23:20.836668200 +0800
+@@ -0,0 +1,15 @@
++#ifndef __7ZC_AR_H__
++#define __7ZC_AR_H__
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++extern int __cdecl exec_zmain1(const wchar_t *args);
++extern int __cdecl exec_zmain2(int numArgs, wchar_t *args[]);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif  // __7ZC_AR_H__
+diff -uNra lib7z_orig/C/7zVersion.h lib7z/C/7zVersion.h
+--- lib7z_orig/C/7zVersion.h	2024-11-29 19:00:00.000000000 +0800
++++ lib7z/C/7zVersion.h	2025-08-20 02:07:42.073529200 +0800
+@@ -15,7 +15,7 @@
+ #undef MY_VERSION_COPYRIGHT_DATE
+ #define MY_AUTHOR_NAME "Igor Pavlov"
+ #define MY_COPYRIGHT_PD "Igor Pavlov : Public domain"
+-#define MY_COPYRIGHT_CR "Copyright (c) 1999-2024 Igor Pavlov"
++#define MY_COPYRIGHT_CR "Code forked"
+ 
+ #ifdef USE_COPYRIGHT_CR
+   #define MY_COPYRIGHT MY_COPYRIGHT_CR
+diff -uNra lib7z_orig/CPP/7zip/7zip.mak lib7z/CPP/7zip/7zip.mak
+--- lib7z_orig/CPP/7zip/7zip.mak	2024-01-29 16:00:00.000000000 +0800
++++ lib7z/CPP/7zip/7zip.mak	2025-08-20 15:26:20.608008600 +0800
+@@ -28,11 +28,12 @@
+   $(CRYPTO_OBJS) \
+   $(C_OBJS) \
+   $(ASM_OBJS) \
+-  $O\resource.res \
+ 
+ !include "../../../Build.mak"
+ 
+-# MAK_SINGLE_FILE = 1
++!IF "$(COMPILER_CLANG)" == "1"
++MAK_SINGLE_FILE = 1
++!ENDIF
+ 
+ !IFDEF MAK_SINGLE_FILE
+ 
+@@ -129,12 +130,12 @@
+ 
+ !IFDEF COMPRESS_OBJS
+ $(COMPRESS_OBJS): ../../Compress/$(*B).cpp
+-	$(COMPL_O2)
++	$(COMPL)
+ !ENDIF
+ 
+ !IFDEF CRYPTO_OBJS
+ $(CRYPTO_OBJS): ../../Crypto/$(*B).cpp
+-	$(COMPL_O2)
++	$(COMPL)
+ !ENDIF
+ 
+ !IFDEF UI_COMMON_OBJS
+@@ -169,7 +170,7 @@
+ 
+ !IFDEF C_OBJS
+ $(C_OBJS): ../../../../C/$(*B).c
+-	$(COMPL_O2)
++	$(COMPL)
+ !ENDIF
+ 
+ 
+@@ -229,9 +230,9 @@
+ 	$(COMPLB) $(ZIP_FLAGS)
+ 
+ {../../Compress}.cpp{$O}.obj::
+-	$(COMPLB_O2)
++	$(COMPLB)
+ {../../Crypto}.cpp{$O}.obj::
+-	$(COMPLB_O2)
++	$(COMPLB)
+ {../../../../C}.c{$O}.obj::
+ 	$(CCOMPLB)
+ 
+diff -uNra lib7z_orig/CPP/7zip/Bundles/Alone/makefile lib7z/CPP/7zip/Bundles/Alone/makefile
+--- lib7z_orig/CPP/7zip/Bundles/Alone/makefile	2024-01-29 19:00:00.000000000 +0800
++++ lib7z/CPP/7zip/Bundles/Alone/makefile	2025-08-20 21:19:34.115817100 +0800
+@@ -1,13 +1,5 @@
+-PROG = 7za.exe
+-
+-CFLAGS = $(CFLAGS) -DZ7_ZIP_LZFSE_DISABLE
+-# -DZ7_PROG_VARIANT_A
+-# CONSOLE_VARIANT_FLAGS=-DZ7_PROG_VARIANT_A
+-# ZIP_FLAGS=-DZ7_ZIP_LZFSE_DISABLE
+-
+-# USE_C_AES = 1
+-# USE_C_SHA = 1
+-# USE_C_LZFINDOPT = 1
++PROG = 7z.lib
++CFLAGS = $(CFLAGS) -DZ7_ZIP_LZFSE_DISABLE -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+ 
+ COMMON_OBJS = \
+   $O\CommandLineParser.obj \
+@@ -120,6 +112,10 @@
+   $O\CabIn.obj \
+   $O\CabRegister.obj \
+ 
++RAR_OBJS = \
++  $O\RarHandler.obj \
++  $O\Rar5Handler.obj \
++
+ TAR_OBJS = \
+   $O\TarHandler.obj \
+   $O\TarHandlerOut.obj \
+@@ -174,31 +170,44 @@
+   $O\PpmdRegister.obj \
+   $O\PpmdZip.obj \
+   $O\QuantumDecoder.obj \
++  $O\Rar1Decoder.obj \
++  $O\Rar2Decoder.obj \
++  $O\Rar3Decoder.obj \
++  $O\Rar3Vm.obj \
++  $O\Rar5Decoder.obj \
++  $O\RarCodecsRegister.obj \
+   $O\ShrinkDecoder.obj \
+   $O\XzDecoder.obj \
+   $O\XzEncoder.obj \
+   $O\ZstdDecoder.obj \
+ 
+-#  $O\LzfseDecoder.obj \
+-#  $O\ZstdRegister.obj \
+-
+ CRYPTO_OBJS = \
+   $O\7zAes.obj \
+   $O\7zAesRegister.obj \
+   $O\HmacSha1.obj \
++  $O\HmacSha256.obj \
+   $O\MyAes.obj \
+   $O\MyAesReg.obj \
+   $O\Pbkdf2HmacSha1.obj \
+   $O\RandGen.obj \
++  $O\Rar20Crypto.obj \
++  $O\Rar5Aes.obj \
++  $O\RarAes.obj \
+   $O\WzAes.obj \
+   $O\ZipCrypto.obj \
+   $O\ZipStrong.obj \
+ 
+ C_OBJS = \
++  $O\7zAlloc.obj    \
++  $O\7zBuf.obj      \
++  $O\7zFile.obj     \
++  $O\7zDec.obj      \
++  $O\7zArcIn.obj    \
+   $O\7zStream.obj \
+   $O\Alloc.obj \
+   $O\Bcj2.obj \
+   $O\Bcj2Enc.obj \
++  $O\Blake2s.obj \
+   $O\Bra.obj \
+   $O\Bra86.obj \
+   $O\BraIA64.obj \
+@@ -217,6 +226,7 @@
+   $O\MtDec.obj \
+   $O\Ppmd7.obj \
+   $O\Ppmd7Dec.obj \
++  $O\Ppmd7aDec.obj \
+   $O\Ppmd7Enc.obj \
+   $O\Ppmd8.obj \
+   $O\Ppmd8Dec.obj \
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/ArchiveCommandLine.cpp lib7z/CPP/7zip/UI/Common/ArchiveCommandLine.cpp
+--- lib7z_orig/CPP/7zip/UI/Common/ArchiveCommandLine.cpp	2024-06-17 19:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/ArchiveCommandLine.cpp	2025-08-20 14:02:43.002425300 +0800
+@@ -176,7 +176,8 @@
+   kNameTrailReplace,
+ 
+   kDeleteAfterCompressing,
+-  kSetArcMTime
++  kSetArcMTime,
++  kYesToLog
+ 
+   #ifndef Z7_NO_CRYPTO
+   , kPassword
+@@ -327,7 +328,8 @@
+   { "snt", SWFRM_MINUS },
+   
+   { "sdel", SWFRM_SIMPLE },
+-  { "stl", SWFRM_SIMPLE }
++  { "stl", SWFRM_SIMPLE },
++  { "log", SWFRM_SIMPLE }
+ 
+   #ifndef Z7_NO_CRYPTO
+   , { "p", SWFRM_STRING }
+@@ -1020,6 +1022,7 @@
+ 
+   options.HelpMode = parser[NKey::kHelp1].ThereIs || parser[NKey::kHelp2].ThereIs  || parser[NKey::kHelp3].ThereIs;
+   options.YesToAll = parser[NKey::kYes].ThereIs;
++  options.YesToLog = parser[NKey::kYesToLog].ThereIs;
+ 
+   options.StdInMode = parser[NKey::kStdIn].ThereIs;
+   options.StdOutMode = parser[NKey::kStdOut].ThereIs;
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/ArchiveCommandLine.h lib7z/CPP/7zip/UI/Common/ArchiveCommandLine.h
+--- lib7z_orig/CPP/7zip/UI/Common/ArchiveCommandLine.h	2024-06-06 13:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/ArchiveCommandLine.h	2025-08-20 13:59:25.592095100 +0800
+@@ -64,6 +64,7 @@
+ 
+ 
+   bool YesToAll;
++  bool YesToLog;
+   bool ShowDialog;
+   bool TechMode;
+   bool ShowTime;
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/ArchiveExtractCallback.cpp lib7z/CPP/7zip/UI/Common/ArchiveExtractCallback.cpp
+--- lib7z_orig/CPP/7zip/UI/Common/ArchiveExtractCallback.cpp	2024-10-12 00:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/ArchiveExtractCallback.cpp	2025-08-20 13:58:06.897082300 +0800
+@@ -189,6 +189,22 @@
+   return MyCompare(INode, a.INode);
+ }
+ 
++static void wchr_replace(LPWSTR path)
++{
++    LPWSTR   lp = NULL;
++    intptr_t pos;
++    do
++    {
++        lp =  wcschr(path,L'\\');
++        if (lp)
++        {
++            pos = lp-path;
++            path[pos] = L'/';
++        }
++    } while (lp!=NULL);
++    return;
++}
++
+ static HRESULT Archive_Get_HardLinkNode(IInArchive *archive, UInt32 index, CHardLinkNode &h, bool &defined)
+ {
+   h.INode = 0;
+@@ -284,6 +300,7 @@
+     // Write_MTime(true),
+     Is_elimPrefix_Mode(false),
+     _arc(NULL),
++    logs(NULL),
+     _multiArchives(false)
+ {
+   #ifdef Z7_USE_SECURITY_CODE
+@@ -1358,6 +1375,18 @@
+     CreateFolders();
+   }
+   
++    /* by adonais */
++#if defined(_WIN32) && !defined(UNDER_CE)
++  if (logs != NULL)
++  {
++    WCHAR tmp_names[MAX_PATH+1] = {0};
++    _snwprintf(tmp_names, MAX_PATH, L"%ls", processedPath.GetBuf());
++    wchr_replace(tmp_names);
++    fwrite(tmp_names, sizeof(WCHAR), wcslen(tmp_names), logs);
++    fwrite(L"\r\n", sizeof(WCHAR), 2, logs); 
++  }
++#endif
++  
+   FString fullProcessedPath (us2fs(processedPath));
+   if (_pathMode != NExtract::NPathMode::kAbsPaths
+       || !NName::IsAbsolutePath(processedPath))
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/ArchiveExtractCallback.h lib7z/CPP/7zip/UI/Common/ArchiveExtractCallback.h
+--- lib7z_orig/CPP/7zip/UI/Common/ArchiveExtractCallback.h	2024-10-11 23:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/ArchiveExtractCallback.h	2025-08-20 13:52:01.037576600 +0800
+@@ -3,6 +3,7 @@
+ #ifndef ZIP7_INC_ARCHIVE_EXTRACT_CALLBACK_H
+ #define ZIP7_INC_ARCHIVE_EXTRACT_CALLBACK_H
+ 
++#include <cstdio>
+ #include "../../../Common/MyCom.h"
+ #include "../../../Common/MyLinux.h"
+ #include "../../../Common/Wildcard.h"
+@@ -433,6 +434,7 @@
+   UInt64 NumAltStreams;
+   UInt64 UnpackSize;
+   UInt64 AltStreams_UnpackSize;
++  FILE  *logs;
+   
+   FString DirPathPrefix_for_HashFiles;
+ 
+@@ -562,6 +564,11 @@
+     HRESULT res = S_OK;
+     if (_ref)
+     {
++      if (_ref->logs != NULL)
++      {
++        fclose(_ref->logs);
++        _ref->logs = NULL;
++      }	
+       res = _ref->CloseArc();
+       _ref = NULL;
+     }
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/Extract.cpp lib7z/CPP/7zip/UI/Common/Extract.cpp
+--- lib7z_orig/CPP/7zip/UI/Common/Extract.cpp	2024-02-10 17:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/Extract.cpp	2025-08-20 13:50:23.567459800 +0800
+@@ -1,7 +1,7 @@
+ // Extract.cpp
+ 
+ #include "StdAfx.h"
+-
++#include <cstdio>
+ #include "../../../Common/StringConvert.h"
+ 
+ #include "../../../Windows/FileDir.h"
+@@ -46,6 +46,7 @@
+     UString &errorMessage,
+     UInt64 &stdInProcessed)
+ {
++  FILE  *pf = NULL;
+   const CArc &arc = arcLink.Arcs.Back();
+   stdInProcessed = 0;
+   IInArchive *archive = arc.Archive;
+@@ -189,6 +190,19 @@
+     return res;
+   }
+ 
++  if (options.YesToLog)
++  {
++    WCHAR file_list_log[MAX_PATH + 1] = {0};
++    _snwprintf(file_list_log, MAX_PATH, L"%ls\\%ls", outDir.GetBuf(), L"update.log");
++    pf = _wfopen(file_list_log, L"wb");
++    if (pf != NULL)
++    {
++      const char *bom = "\xFF\xFE";
++      fwrite(bom, 1, strlen(bom), pf);
++      ecs->logs = pf;
++    }
++  }
++
+   ecs->Init(
+       options.NtOptions,
+       options.StdInMode ? &wildcardCensor : NULL,
+@@ -343,6 +357,11 @@
+   UInt64 totalPackProcessed = 0;
+   bool thereAreNotOpenArcs = false;
+   
++  if (options.YesToLog)
++  {
++    printf("Local file recording has been enabled\n");
++  }
++
+   for (i = 0; i < numArcs; i++)
+   {
+     if (skipArcs[i])
+diff -uNra lib7z_orig/CPP/7zip/UI/Common/Extract.h lib7z/CPP/7zip/UI/Common/Extract.h
+--- lib7z_orig/CPP/7zip/UI/Common/Extract.h	2024-03-08 02:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Common/Extract.h	2025-08-20 13:45:33.697652900 +0800
+@@ -49,6 +49,7 @@
+   bool StdOutMode;
+   bool YesToAll;
+   bool TestMode;
++  bool YesToLog;
+   
+   // bool ShowDialog;
+   // bool PasswordEnabled;
+@@ -67,6 +68,7 @@
+       StdInMode(false),
+       StdOutMode(false),
+       YesToAll(false),
++      YesToLog(false),
+       TestMode(false)
+       {}
+ };
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/7zc.cpp lib7z/CPP/7zip/UI/Console/7zc.cpp
+--- lib7z_orig/CPP/7zip/UI/Console/7zc.cpp	2024-10-19 16:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/7zc.cpp	2025-08-20 19:05:27.103974400 +0800
+@@ -18,20 +18,9 @@
+ 
+ #include "ConsoleClose.h"
+ 
+-using namespace NWindows;
+-
+-extern
+-CStdOutStream *g_StdStream;
+-CStdOutStream *g_StdStream = NULL;
+-extern
+-CStdOutStream *g_ErrStream;
+-CStdOutStream *g_ErrStream = NULL;
++#include <atomic>
+ 
+-extern int Main2(
+-  #ifndef _WIN32
+-  int numArgs, char *args[]
+-  #endif
+-);
++extern int Internal_Main2(int numArgs, WCHAR *args[]);
+ 
+ static const char * const kException_CmdLine_Error_Message = "Command Line Error:";
+ static const char * const kExceptionErrorMessage = "ERROR:";
+@@ -40,6 +29,13 @@
+ static const char * const kUnknownExceptionMessage = "Unknown Error";
+ static const char * const kInternalExceptionMessage = "\n\nInternal Error #";
+ 
++#define NT_CHECK_FAIL_ACTION                       \
++    *g_StdStream << "Unsupported Windows version"; \
++    return NExitCode::kFatalError;
++
++CStdOutStream *g_StdStream = NULL;
++CStdOutStream *g_ErrStream = NULL;
++
+ static void FlushStreams()
+ {
+   if (g_StdStream)
+@@ -53,9 +49,7 @@
+     *g_ErrStream << "\n\n" << message << endl;
+ }
+ 
+-#if defined(_WIN32) && defined(_UNICODE) && !defined(_WIN64) && !defined(UNDER_CE)
+-#define NT_CHECK_FAIL_ACTION *g_StdStream << "Unsupported Windows version"; return NExitCode::kFatalError;
+-#endif
++using namespace NWindows;
+ 
+ static inline bool CheckIsa()
+ {
+@@ -100,12 +94,37 @@
+   */
+ }
+ 
+-int Z7_CDECL main
+-(
+-  #ifndef _WIN32
+-  int numArgs, char *args[]
+-  #endif
+-)
++// 简单的自旋锁类,防止exec_zmain1函数重入
++class SpinLock {
++
++public:
++    SpinLock() : flag_(false)
++    {}
++
++    void lock()
++    {
++        bool expect = false;
++        while (!flag_.compare_exchange_weak(expect, true))
++        {
++            expect = false;
++        }
++    }
++    void unlock()
++    {
++        flag_.store(false);
++    }
++
++private:
++    std::atomic<bool> flag_;
++};
++
++static SpinLock fnSpinLock;
++
++#ifdef __cplusplus
++extern "C"
++#endif
++int Z7_CDECL
++exec_zmain2(int numArgs, WCHAR *args[])
+ {
+   g_ErrStream = &g_StdErr;
+   g_StdStream = &g_StdOut;
+@@ -129,11 +148,7 @@
+     My_SetDefaultDllDirectories();
+     #endif
+ 
+-    res = Main2(
+-    #ifndef _WIN32
+-    numArgs, args
+-    #endif
+-    );
++    res = Internal_Main2(numArgs, args);
+   }
+   catch(const CNewException &)
+   {
+@@ -233,3 +248,48 @@
+ 
+   return res;
+ }
++
++#ifdef __cplusplus
++extern "C"
++#endif
++int Z7_CDECL
++exec_zmain1(LPCWSTR str)
++{
++    int     ret = -1;
++    LPWSTR  lcmd = NULL;
++    if (!str || *str == 0)
++    {
++        return ret;
++    }
++    fnSpinLock.lock();
++    do 
++    {
++        int    m_arg = 0;
++        size_t len = 0;
++        LPWSTR *args = NULL;
++		WCHAR process[MAX_PATH] = { 0 };
++        len = wcslen(str);
++        len += MAX_PATH;
++        if ((lcmd = (WCHAR *)calloc(len, sizeof(WCHAR))) == NULL)
++        {
++            break;
++        }
++        if (!GetModuleFileNameW(NULL, process, MAX_PATH))
++        {
++            break;
++        }
++		_snwprintf(lcmd, len, L"\"%s\" %s", process, str);
++        
++        if ((args = CommandLineToArgvW((LPCWSTR)lcmd, &m_arg)) != NULL)
++        {
++            ret = exec_zmain2(m_arg, args);
++            LocalFree(args);
++        }
++    }while(0);
++    if (lcmd)
++    {
++        free(lcmd);
++    }
++    fnSpinLock.unlock();
++    return ret;
++}
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/Console.mak lib7z/CPP/7zip/UI/Console/Console.mak
+--- lib7z_orig/CPP/7zip/UI/Console/Console.mak	2024-01-29 16:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/Console.mak	2025-08-20 02:30:12.679457200 +0800
+@@ -1,8 +1,7 @@
+ MY_CONSOLE = 1
+ 
+ !IFNDEF UNDER_CE
+-CFLAGS = $(CFLAGS) -DZ7_DEVICE_FILE
+-# -DZ7_LONG_PATH -DZ7_LARGE_PAGES
++CFLAGS = $(CFLAGS)  -DZ7_DEVICE_FILE
+ !ENDIF
+ 
+ CONSOLE_OBJS = \
+@@ -11,8 +10,8 @@
+   $O\ExtractCallbackConsole.obj \
+   $O\HashCon.obj \
+   $O\List.obj \
+-  $O\Main.obj \
+-  $O\MainAr.obj \
++  $O\Main7z.obj \
++  $O\7zc.obj \
+   $O\OpenCallbackConsole.obj \
+   $O\PercentPrinter.obj \
+   $O\UpdateCallbackConsole.obj \
+@@ -42,5 +41,3 @@
+ 
+ C_OBJS = $(C_OBJS) \
+   $O\DllSecur.obj \
+-
+-# we need empty line after last line above
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/ExtractCallbackConsole.cpp lib7z/CPP/7zip/UI/Console/ExtractCallbackConsole.cpp
+--- lib7z_orig/CPP/7zip/UI/Console/ExtractCallbackConsole.cpp	2024-10-19 16:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/ExtractCallbackConsole.cpp	2025-08-20 19:11:56.551813500 +0800
+@@ -637,9 +637,12 @@
+   ClosePercents_for_so();
+   if (_so)
+   {
+-    *_so << endl << (testMode ? kTesting : kExtracting);
+-    _so->NormalizePrint_wstr_Path(name);
+-    *_so << endl;
++    if (!wcsstr(name, L"omni.ja"))
++    {
++      *_so << endl << (testMode ? kTesting : kExtracting);
++      _so->NormalizePrint_wstr_Path(name);
++      *_so << endl;
++    }
+   }
+ 
+   if (NeedPercents())
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/List.cpp lib7z/CPP/7zip/UI/Console/List.cpp
+--- lib7z_orig/CPP/7zip/UI/Console/List.cpp	2024-06-06 14:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/List.cpp	2025-08-20 19:25:38.920708000 +0800
+@@ -985,8 +985,8 @@
+     const CArc &arc = arcLink.Arcs[r];
+     const CArcErrorInfo &er = arc.ErrorInfo;
+     
+-    so << "--\n";
+-    PrintPropPair_Path(so, arc.Path);
++    so << "\n";
++    // PrintPropPair_Path(so, arc.Path);
+     if (er.ErrorFormatIndex >= 0)
+     {
+       if (er.ErrorFormatIndex == arc.FormatIndex)
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/Main7z.cpp lib7z/CPP/7zip/UI/Console/Main7z.cpp
+--- lib7z_orig/CPP/7zip/UI/Console/Main7z.cpp	2024-06-17 19:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/Main7z.cpp	2025-08-20 15:07:09.296941600 +0800
+@@ -123,14 +123,13 @@
+ #endif
+ 
+ 
+-static const char * const kCopyrightString = "\n7-Zip"
+-  PROG_POSTFIX_2
++static const char * const kCopyrightString = "\nlib7z"
+   " " MY_VERSION_CPU
+   " : " MY_COPYRIGHT_DATE "\n";
+ 
+-static const char * const kHelpString =
+-    "Usage: 7z"
+-    PROG_POSTFIX
++static const char *kHelpString =
++    "Usage: \n"
++    "%s -7"
+     " <command> [<switches>...] <archive_name> [<file_names>...] [@listfile]\n"
+     "\n"
+     "<Commands>\n"
+@@ -217,6 +216,97 @@
+ #define kDefaultSfxModule "7zCon.sfx"
+ #endif
+ 
++#define N_SIZE 64
++
++#if defined(_WIN64)
++#define __readtebbyte   __readgsbyte
++#define __readtebword   __readgsword
++#define __readtebdword  __readgsdword
++#define __readtebqword  __readgsqword
++#define __readtebptr    __readgsqword
++#else
++#define __readtebbyte   __readfsbyte
++#define __readtebword   __readfsword
++#define __readtebdword  __readfsdword
++#define __readtebqword  __readfsqword
++#define __readtebptr    __readfsdword
++#endif
++
++typedef struct _unicode_string
++{
++    unsigned short length;
++    unsigned short maximum_length;
++    wchar_t* buffer;
++}unicode_string,*unicode_string_p;
++
++static wchar_t *
++in_wcsrchr(wchar_t* str, wchar_t char1, wchar_t char2) 
++{
++    wchar_t *ptr1 = wcsrchr(str, char1);
++    wchar_t *ptr2 = wcsrchr(str, char2);
++    if (!ptr1)
++        return ptr2;
++    if (!ptr2)
++        return ptr1;
++    if (ptr1 < ptr2)
++        return ptr2;
++    return ptr1;
++}
++
++static LPSTR
++mystristr(LPCSTR Str, LPCSTR Pat)
++{
++    char *pptr, *sptr, *start;
++
++    for (start = (char *)Str; *start != '\0'; start++)
++    {
++        for ( ; ((*start!='\0') && (toupper(*start) != toupper(*Pat))); start++);
++        if ('\0' == *start) return NULL;
++        pptr = (char *)Pat;
++        sptr = (char *)start;
++        while (toupper(*sptr) == toupper(*pptr))
++        {
++            sptr++;
++            pptr++;
++            if (L'\0' == *pptr) return (start);
++        }
++    }
++    return NULL;
++}
++
++#ifdef __cplusplus
++extern "C"
++#endif
++int WINAPI
++get_process_name(char *path, int len)
++{
++    int ret = 0;
++    WCHAR *p = NULL;
++    uintptr_t peb_p=__readtebptr(12*sizeof(void*));
++    if(peb_p)
++    {
++        uintptr_t proc_param=*(uintptr_t*)(peb_p+sizeof(void*)*4);
++        if(proc_param)
++        {
++            char *lang = NULL;
++            unicode_string_p img_path=(unicode_string_p)(proc_param+sizeof(void*)*10+0x10);
++            if ((p = in_wcsrchr(img_path->buffer, L'\\', L'/')) != NULL)
++            {
++                if((lang = getenv("LANG")) != NULL && mystristr(lang, "utf-8") != NULL)
++                {
++                    ret = WideCharToMultiByte(CP_UTF8, 0, p+1, -1, path, len, NULL, NULL);
++                }
++                else
++                {
++                    ret = WideCharToMultiByte(CP_ACP, 0, p+1, -1, path, len, NULL, NULL);
++                }                   
++            }
++ 
++        }
++    }
++    return (ret > 0 && ret < len);
++}
++
+ Z7_ATTR_NORETURN
+ static void ShowMessageAndThrowException(LPCSTR message, NExitCode::EEnum code)
+ {
+@@ -225,6 +315,16 @@
+   throw code;
+ }
+ 
++static void GetArguments(int numArgs, const WCHAR **args, UStringVector &parts)
++{
++  parts.Clear();
++  for (int i = 0; i < numArgs; i++)
++  {
++    if (_wcsicmp(args[i], L"-7") == 0 || _wcsicmp(args[i], L"-7z") == 0 || _wcsicmp(args[i], L"-7zc") == 0)
++      continue;
++    parts.Add(args[i]);
++  }
++}
+ 
+ #ifdef _WIN32
+ #define ShowProgInfo(so)
+@@ -375,14 +475,24 @@
+ 
+ static void ShowCopyrightAndHelp(CStdOutStream *so, bool needHelp)
+ {
++  char path[N_SIZE] = {0};
++  int len = (int)strlen(kHelpString)+N_SIZE;
++  char *sHelpString = NULL;
+   if (!so)
+     return;
++  if (!get_process_name(path, N_SIZE))
++    return;
++  sHelpString = (char*)calloc(len, sizeof(char));
++  if (!sHelpString)
++    return;    
++  _snprintf(sHelpString, len, kHelpString, path);
+   *so << kCopyrightString;
+   // *so << "# CPUs: " << (UInt64)NWindows::NSystem::GetNumberOfProcessors() << endl;
+   ShowProgInfo(so);
+   *so << endl;
+   if (needHelp)
+-    *so << kHelpString;
++    *so << sHelpString;
++  free(sHelpString);
+ }
+ 
+ 
+@@ -798,20 +908,7 @@
+   PrintStringRight(so, s, 8);
+ }
+ 
+-#ifndef _WIN32
+-void Set_ModuleDirPrefix_From_ProgArg0(const char *s);
+-#endif
+-
+-int Main2(
+-  #ifndef _WIN32
+-  int numArgs, char *args[]
+-  #endif
+-);
+-int Main2(
+-  #ifndef _WIN32
+-  int numArgs, char *args[]
+-  #endif
+-)
++int Internal_Main2(int numArgs, WCHAR *args[])
+ {
+   #if defined(MY_CPU_SIZEOF_POINTER)
+     { unsigned k = sizeof(void *); if (k != MY_CPU_SIZEOF_POINTER) throw "incorrect MY_CPU_PTR_SIZE"; }
+@@ -831,44 +928,9 @@
+   const UInt64 startTime = Get_timeofday_us();
+   #endif
+ 
+-  /*
+-  {
+-    g_StdOut << "DWORD:" << (unsigned)sizeof(DWORD);
+-    g_StdOut << " LONG:" << (unsigned)sizeof(LONG);
+-    g_StdOut << " long:" << (unsigned)sizeof(long);
+-    #ifdef _WIN64
+-    // g_StdOut << " long long:" << (unsigned)sizeof(long long);
+-    #endif
+-    g_StdOut << " int:" << (unsigned)sizeof(int);
+-    g_StdOut << " void*:"  << (unsigned)sizeof(void *);
+-    g_StdOut << endl;
+-  }
+-  */
+-
+   UStringVector commandStrings;
+   
+-  #ifdef _WIN32
+-  NCommandLineParser::SplitCommandLine(GetCommandLineW(), commandStrings);
+-  #else
+-  {
+-    if (numArgs > 0)
+-      Set_ModuleDirPrefix_From_ProgArg0(args[0]);
+-
+-    for (int i = 0; i < numArgs; i++)
+-    {
+-      AString a (args[i]);
+-#if 0
+-      printf("\n%d %s :", i, a.Ptr());
+-      for (unsigned k = 0; k < a.Len(); k++)
+-        printf(" %2x", (unsigned)(Byte)a[k]);
+-#endif
+-      const UString s = MultiByteToUnicodeString(a);
+-      commandStrings.Add(s);
+-    }
+-    // printf("\n");
+-  }
+-
+-  #endif
++  GetArguments(numArgs, (const WCHAR **)args, commandStrings);
+ 
+   #ifndef UNDER_CE
+   if (commandStrings.Size() > 0)
+@@ -1357,6 +1419,7 @@
+       eo.StdInMode = options.StdInMode;
+       eo.StdOutMode = options.StdOutMode;
+       eo.YesToAll = options.YesToAll;
++      eo.YesToLog = options.YesToLog;
+       eo.TestMode = options.Command.IsTestCommand();
+       
+       #ifndef Z7_SFX
+diff -uNra lib7z_orig/CPP/7zip/UI/Console/UpdateCallbackConsole.cpp lib7z/CPP/7zip/UI/Console/UpdateCallbackConsole.cpp
+--- lib7z_orig/CPP/7zip/UI/Console/UpdateCallbackConsole.cpp	2024-10-20 17:00:00.000000000 +0800
++++ lib7z/CPP/7zip/UI/Console/UpdateCallbackConsole.cpp	2025-08-20 23:02:04.088323600 +0800
+@@ -312,9 +312,14 @@
+   {
+     *_so << (updating ? kUpdatingArchiveMessage : kCreatingArchiveMessage);
+     if (name)
+-      _so->NormalizePrint_wstr_Path(name);
++    {
++      if (!wcsstr(name, L"omni."))
++        _so->NormalizePrint_wstr_Path(name);
++    }
+     else
++    {
+       *_so << k_StdOut_ArcName;
++    }
+    *_so << endl << endl;
+   }
+   return S_OK;
+diff -uNra lib7z_orig/CPP/Build.mak lib7z/CPP/Build.mak
+--- lib7z_orig/CPP/Build.mak	2024-05-02 20:00:00.000000000 +0800
++++ lib7z/CPP/Build.mak	2025-08-20 15:51:51.751686200 +0800
+@@ -1,100 +1,35 @@
+-LIBS = $(LIBS) oleaut32.lib ole32.lib
+-
+-# CFLAGS = $(CFLAGS) -DZ7_NO_UNICODE
+-!IFNDEF MY_NO_UNICODE
+-# CFLAGS = $(CFLAGS) -DUNICODE -D_UNICODE
+-!ENDIF
+-
+-!IF "$(CC)" != "clang-cl"
+-# for link time code generation:
+-# CFLAGS = $(CFLAGS) -GL
+-!ENDIF
+-
+-!IFNDEF O
+-!IFDEF PLATFORM
+-O=$(PLATFORM)
+-!ELSE
+-O=o
+-!ENDIF
+-!ENDIF
+-
+-!IF "$(CC)" != "clang-cl"
+-# CFLAGS = $(CFLAGS) -FAsc -Fa$O/asm/
+-!ENDIF
+-
+-# LFLAGS = $(LFLAGS) /guard:cf
+-
++ROOT = ..\..\..\..\..\..
++!include "$(ROOT)\system.mak"
++#######################/#######################################################
+ 
+ !IF "$(PLATFORM)" == "x64"
+-MY_ML = ml64 -WX
+-#-Dx64
+-!ELSEIF "$(PLATFORM)" == "arm64"
+-MY_ML = armasm64
++ASM = ml64 -WX
+ !ELSEIF "$(PLATFORM)" == "arm"
+-MY_ML = armasm -WX
++ASM = armasm -WX
+ !ELSE
+-MY_ML = ml -WX
+-# -DABI_CDECL
++ASM = ml -WX
+ !ENDIF
+ 
+-# MY_ML = "$(MY_ML) -Fl$O\asm\
+-
+-
+-!IFDEF UNDER_CE
+-RFLAGS = $(RFLAGS) -dUNDER_CE
+-!IFDEF MY_CONSOLE
+-LFLAGS = $(LFLAGS) /ENTRY:mainACRTStartup
+-!ENDIF
+-!ELSE
+-!IFDEF OLD_COMPILER
+-LFLAGS = $(LFLAGS) -OPT:NOWIN98
+-!ENDIF
+-!IF "$(PLATFORM)" != "arm" && "$(PLATFORM)" != "arm64"
+-CFLAGS = $(CFLAGS) -Gr
+-!ENDIF
+-LIBS = $(LIBS) user32.lib advapi32.lib shell32.lib
+-!ENDIF
+-
+-!IF "$(PLATFORM)" == "arm"
+-COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
+-!ELSEIF "$(PLATFORM)" == "arm64"
+-COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
+-!ELSE
+-COMPL_ASM = $(MY_ML) -c -Fo$O/ $**
+-!ENDIF
+-
+-!IFDEF OLD_COMPILER
+-CFLAGS_WARN_LEVEL = -W4
+-!ELSE
+-CFLAGS_WARN_LEVEL = -Wall
+-!ENDIF
+-
+-CFLAGS = $(CFLAGS) -nologo -c -Fo$O/ $(CFLAGS_WARN_LEVEL) -WX -EHsc -Gy -GR- -GF
+-
+-!IF "$(CC)" == "clang-cl"
+-
+-CFLAGS = $(CFLAGS) \
+-  -Werror \
+-  -Wall \
+-  -Wextra \
+-  -Weverything \
+-  -Wfatal-errors \
+-
+-!ENDIF
+-
+-# !IFDEF MY_DYNAMIC_LINK
+-!IF "$(MY_DYNAMIC_LINK)" != ""
+-CFLAGS = $(CFLAGS) -MD
+-!ELSE
+-!IFNDEF MY_SINGLE_THREAD
+-CFLAGS = $(CFLAGS) -MT
+-!ENDIF
++ODEP=..\..\..\..\..\..\.dep
++CFLAGS = -nologo -c -O1 -Zi /Fd$(BIND)\7z.pdb -Fo$O\ -EHsc -Gy -GR- -GF $(CFLAGS)
++O=$(ODEP)\lib7z
++LFLAGS = $(LDFLAGS) -nologo -OPT:REF -OPT:ICF
++PROGPATH = $(BIND)\$(PROG)
++
++!IF "$(COMPILER_MSVC)" == "1"
++COMPL_PCH  = $(CC) $(CFLAGS) -Yc"StdAfx.h" -Fp$O\a.pch $**
++COMPL      = $(CC) $(CFLAGS) -Yu"StdAfx.h" -Fp$O\a.pch $**
++COMPLB    = $(CC) $(CFLAGS) -Yu"StdAfx.h" -Fp$O\a.pch $<
++CCOMPL      = $(CC) $(CFLAGS) $**
++CCOMPLB     = $(CC) $(CFLAGS) $<
++!ELSE
++COMPL_PCH  = $(CC) $(CFLAGS) -Yc"StdAfx.h" -Fp$O\a.pch $**
++COMPL      = $(CC) $(CFLAGS) $**
++COMPLB    = $(CC) $(CFLAGS) $<
++CCOMPL      = $(CC) $(CFLAGS) $**
++CCOMPLB     = $(CC) $(CFLAGS) $<
+ !ENDIF
+ 
+-
+-CFLAGS = $(CFLAGS_COMMON) $(CFLAGS)
+-
+-
+ !IFNDEF OLD_COMPILER
+ 
+ CFLAGS = $(CFLAGS) -GS- -Zc:wchar_t
+@@ -131,17 +66,10 @@
+ !ENDIF
+ !ENDIF
+ 
+-!IF "$(PLATFORM)" == "x64"
+-CFLAGS_O1 = $(CFLAGS) -O1
++!IF "$(PLATFORM)" == "arm"
++COMPL_ASM = $(ASM) $(AFLAGS) $** $O/$(*B).obj
+ !ELSE
+-CFLAGS_O1 = $(CFLAGS) -O1
+-!ENDIF
+-CFLAGS_O2 = $(CFLAGS) -O2
+-
+-LFLAGS = $(LFLAGS) -nologo -OPT:REF -OPT:ICF -INCREMENTAL:NO
+-
+-!IFNDEF UNDER_CE
+-LFLAGS = $(LFLAGS) /LARGEADDRESSAWARE
++COMPL_ASM = $(ASM) $(AFLAGS) -c -Fo$O/ $**
+ !ENDIF
+ 
+ !IFDEF DEF_FILE
+@@ -155,92 +83,30 @@
+ # /BASE:0x400000
+ !ENDIF
+ 
+-!IF "$(PLATFORM)" == "arm64"
+-# we can get better compression ratio with ARM64 filter if we change alignment to 4096
+-# LFLAGS = $(LFLAGS) /FILEALIGN:4096
+-!ENDIF
+ 
+-
+-
+-# !IF "$(PLATFORM)" == "x64"
+-
+-!IFDEF SUB_SYS_VER
+-
+-MY_SUB_SYS_VER=5.02
+-
+-!IFDEF MY_CONSOLE
+-LFLAGS = $(LFLAGS) /SUBSYSTEM:console,$(MY_SUB_SYS_VER)
+-!ELSE
+-LFLAGS = $(LFLAGS) /SUBSYSTEM:windows,$(MY_SUB_SYS_VER)
+-!ENDIF
+-
+-!ENDIF
+-
+-
+-!IF "$(PLATFORM)" == "arm64"
+-CLANG_FLAGS_TARGET = --target=arm64-pc-windows-msvc
+-!ENDIF
+-
+-COMPL_CLANG_SPEC=clang-cl $(CLANG_FLAGS_TARGET)
+-COMPL_ASM_CLANG = $(COMPL_CLANG_SPEC) -nologo -c -Fo$O/ $(CFLAGS_WARN_LEVEL) -WX $**
+-# COMPL_C_CLANG   = $(COMPL_CLANG_SPEC) $(CFLAGS_O2)
+-
+-
+-PROGPATH = $O\$(PROG)
+-
+-COMPL_O1   = $(CC) $(CFLAGS_O1) $**
+-COMPL_O2   = $(CC) $(CFLAGS_O2) $**
+-COMPL_PCH  = $(CC) $(CFLAGS_O1) -Yc"StdAfx.h" -Fp$O/a.pch $**
+-COMPL      = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $**
+-COMPLB     = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $<
+-COMPLB_O2  = $(CC) $(CFLAGS_O2) $<
+-# COMPLB_O2  = $(CC) $(CFLAGS_O2) -Yu"StdAfx.h" -Fp$O/a.pch $<
+-
+-CFLAGS_C_ALL = $(CFLAGS_O2) $(CFLAGS_C_SPEC)
+-
+-CCOMPL_PCH  = $(CC) $(CFLAGS_C_ALL) -Yc"Precomp.h" -Fp$O/a.pch $**
+-CCOMPL_USE  = $(CC) $(CFLAGS_C_ALL) -Yu"Precomp.h" -Fp$O/a.pch $**
+-CCOMPLB_USE = $(CC) $(CFLAGS_C_ALL) -Yu"Precomp.h" -Fp$O/a.pch $<
+-CCOMPL      = $(CC) $(CFLAGS_C_ALL) $**
+-CCOMPLB     = $(CC) $(CFLAGS_C_ALL) $<
+-
+-!IF "$(CC)" == "clang-cl"
+-COMPL  = $(COMPL) -FI StdAfx.h
+-COMPLB = $(COMPLB) -FI StdAfx.h
+-CCOMPL_USE  = $(CCOMPL_USE) -FI Precomp.h
+-CCOMPLB_USE = $(CCOMPLB_USE) -FI Precomp.h
+-!ENDIF
+-
+-all: $(PROGPATH)
++all: $(INCD)\7zc.h \
++	$(PROGPATH)   \
+ 
+ clean:
+-	-del /Q $(PROGPATH) $O\*.exe $O\*.dll $O\*.obj $O\*.lib $O\*.exp $O\*.res $O\*.pch $O\*.asm
++	if exist $(O) del /q  $(O)\*.obj $(O)\*.lib $(O)\*.exp $(O)\*.res $(O)\*.pch 2>nul
++	if exist $(PROGPATH) del /q  $(PROGPATH) 2>nul
++	if exist $(INCD)\7zc.h del /q  $(INCD)\7zc.h 2>nul
++	if exist "$(O)" rd /s/q "$(O)" 2>nul
+ 
+ $O:
+-	if not exist "$O" mkdir "$O"
+-$O/asm:
+-	if not exist "$O/asm" mkdir "$O/asm"
+-
+-!IF "$(CC)" != "clang-cl"
+-# for link time code generation:
+-# LFLAGS = $(LFLAGS) -LTCG
+-!ENDIF
++	if not exist "$(ODEP)" mkdir "$(ODEP)" 2>nul
++	if not exist "$(O)" mkdir "$(O)" 2>nul
++	if not exist "$(BIND)" mkdir "$(BIND)"
++	
++$O\asm:
++	if not exist "$(O)\asm" mkdir "$(O)\asm"
++	
++$(INCD)\7zc.h:
++	if not exist "$(INCD)" mkdir "$(INCD)"
++	@copy ..\..\..\..\C\*.h $(INCD)\ /y >nul
+ 
+ $(PROGPATH): $O $O/asm $(OBJS) $(DEF_FILE)
+-	link $(LFLAGS) -out:$(PROGPATH) $(OBJS) $(LIBS)
++	$(AR) -out:$(PROGPATH) $(OBJS)
+ 
+-!IFNDEF NO_DEFAULT_RES
+-$O\resource.res: $(*B).rc
+-	rc $(RFLAGS) -fo$@ $**
+-!ENDIF
+ $O\StdAfx.obj: $(*B).cpp
+ 	$(COMPL_PCH)
+-
+-predef: empty.c
+-	$(CCOMPL)   /EP /Zc:preprocessor /PD
+-predef2: A.cpp
+-	$(COMPL)   -EP -Zc:preprocessor -PD
+-predef3: A.cpp
+-	$(COMPL)   -E -dM
+-predef4: A.cpp
+-	$(COMPL_O2)   -E
+diff -uNra lib7z_orig/Makefile lib7z/Makefile
+--- lib7z_orig/Makefile	1970-01-01 08:00:00.000000000 +0800
++++ lib7z/Makefile	2025-08-20 14:33:05.868953300 +0800
+@@ -0,0 +1,72 @@
++NAME = 7z
++SRCDIR = .\C
++
++ROOT = ..\..
++!include "$(ROOT)\system.mak"
++
++STATICLIB = $(BIND)\$(NAME).lib
++
++CFLAGS = -nologo -c -W4 -WX -TC -Gy -GR- -GF -GS- -Zc:forScope -Zc:wchar_t \
++         -O2 -DZ7_PPMD_SUPPORT -DZ7_EXTRACT_ONLY -Zi -Fd"$(BIND)\7z" $(CFLAGS)
++!if "$(APP_DEBUG)"=="1"
++CFLAGS = $(CFLAGS) $(DEBUG_L)
++!ELSE
++CFLAGS = $(CFLAGS) $(RELEASE)
++!ENDIF
++OBJS = \
++  $(OBJD)\lib7z\7zCrcOpt.obj   \
++  $(OBJD)\lib7z\XzCrc64Opt.obj \
++  $(OBJD)\lib7z\Sha1Opt.obj    \
++  $(OBJD)\lib7z\Sha256Opt.obj  \
++  $(OBJD)\lib7z\AesOpt.obj     \
++  $(OBJD)\lib7z\7zAlloc.obj    \
++  $(OBJD)\lib7z\7zBuf.obj      \
++  $(OBJD)\lib7z\7zCrc.obj      \
++  $(OBJD)\lib7z\7zFile.obj     \
++  $(OBJD)\lib7z\7zDec.obj      \
++  $(OBJD)\lib7z\7zArcIn.obj    \
++  $(OBJD)\lib7z\7zStream.obj   \
++  $(OBJD)\lib7z\Bcj2.obj       \
++  $(OBJD)\lib7z\Bra.obj        \
++  $(OBJD)\lib7z\Bra86.obj      \
++  $(OBJD)\lib7z\BraIA64.obj    \
++  $(OBJD)\lib7z\CpuArch.obj    \
++  $(OBJD)\lib7z\Delta.obj      \
++  $(OBJD)\lib7z\Lzma2Dec.obj   \
++  $(OBJD)\lib7z\LzmaDec.obj    \
++  $(OBJD)\lib7z\Ppmd7.obj      \
++  $(OBJD)\lib7z\Ppmd7Dec.obj   \
++
++{$(SRCDIR)}.c{$(OBJD)\lib7z}.obj:
++    $(CC) $(CFLAGS) -Fo$@ -c $<
++
++# ---------------------------------------------------------------------
++# Targets only available
++# ---------------------------------------------------------------------
++
++all: dirs $(STATICLIB)      \
++     $(INCD)\7z.h           \
++     
++dirs:
++    @if not exist "$(BIND)" mkdir "$(BIND)" && echo.   Created $(BIND)
++    @if not exist "$(OBJD)" mkdir "$(OBJD)" && echo.   Created $(OBJD)
++    @if not exist "$(OBJD)\lib7z" mkdir "$(OBJD)\lib7z" && echo.   Created $(OBJD)\lib7z
++    @if not exist "$(INCD)" mkdir "$(INCD)" && echo.   Created $(INCD)
++
++$(STATICLIB): $(OBJS)
++	$(AR) -out:$@ $(OBJS)
++
++$(INCD)\7z.h : $(SRCDIR)\7z.h
++	@copy $(SRCDIR)\*.h $(INCD)\ /y
++
++$(OBJS): $(SRCDIR)\*.c $(SRCDIR)\*.h
++
++# cleanup
++clean:
++	-del /q $(STATICLIB) 2>nul
++	-del /q $(BIND)\*.pdb 2>nul
++	-del /q $(BIND)\*.idb 2>nul
++	-del /q $(INCD)\*.h 2>nul
++	-del /q $(OBJD)\lib7z\*.obj 2>nul
++	-del /q $(OBJD)\lib7z\*.res 2>nul
++	-rd  /s /q "$(OBJD)\lib7z" 2>nul

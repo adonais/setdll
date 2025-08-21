@@ -6,8 +6,8 @@
 // Version
 
 1 VERSIONINFO
-FILEVERSION     1,0,0,100
-PRODUCTVERSION  1,0,0,100
+FILEVERSION     1,1,0,100
+PRODUCTVERSION  1,1,0,100
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -15,12 +15,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "ZH_CN NetWork\0"
       VALUE "FileDescription", "Inject your DLL in a portable executable\0"
-      VALUE "FileVersion", "1.0.0"
+      VALUE "FileVersion", "1.1.0"
       VALUE "InternalName", "Setdll\0"
       VALUE "LegalCopyright", "License: MIT\0"
       VALUE "OriginalFilename", "setdll.exe\0"
       VALUE "ProductName", "setdll.exe"
-      VALUE "ProductVersion", "1.0.0"
+      VALUE "ProductVersion", "1.1.0"
     END
   END
 

@@ -5,7 +5,7 @@ ROOT = .
 
 all:
     cd "$(MAKEDIR)"
-	@if exist "$(MAKEDIR)\src\7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
+	@if exist "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
 	@if exist "$(MAKEDIR)\src\detours\makefile" cd "$(MAKEDIR)\src\detours" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS)
@@ -13,7 +13,7 @@ all:
 
 clean:
     cd "$(MAKEDIR)"
-	@if exist "$(MAKEDIR)\src\7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
+	@if exist "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
 	@if exist "$(MAKEDIR)\src\detours\makefile" cd "$(MAKEDIR)\src\detours" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS) clean
