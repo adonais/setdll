@@ -2,14 +2,6 @@ ROOT = ..\..\..\..\..\..
 !include "$(ROOT)\system.mak"
 #######################/#######################################################
 
-!IF "$(PLATFORM)" == "x64"
-ASM = ml64 -WX
-!ELSEIF "$(PLATFORM)" == "arm"
-ASM = armasm -WX
-!ELSE
-ASM = ml -WX
-!ENDIF
-
 ODEP=..\..\..\..\..\..\.dep
 CFLAGS = -nologo -c -O1 -Zi /Fd$(BIND)\7z.pdb -Fo$O\ -EHsc -Gy -GR- -GF $(CFLAGS)
 O=$(ODEP)\lib7z
