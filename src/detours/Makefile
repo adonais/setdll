@@ -11,7 +11,7 @@ ROOT = ..\..
 !include "$(ROOT)\system.mak"
 #######################/#######################################################
 ##
-CFLAGS=/nologo /W4 /WX /Zi /MT /Gy /Zl /Od /utf-8 $(CFLAGS) -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+CFLAGS=-W4 -WX -Gy $(CFLAGS) -Zi -Fd$(BIND)\detours.pdb -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR -std:c++17
 
 OBJS = \
     $(OBJD)\detours.obj     \
@@ -30,7 +30,7 @@ OBJS = \
 .SUFFIXES: .cpp .h .obj
 
 .cpp{$(OBJD)}.obj:
-    $(CC) $(CFLAGS) /Fd$(BIND)\detours.pdb /Fo$(OBJD)\ /c $<
+    $(CC) $(CFLAGS) -Fo$(OBJD)\ -c $<
 
 ##############################################################################
 
