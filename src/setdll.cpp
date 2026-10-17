@@ -30,19 +30,7 @@
 #include <strsafe.h>
 #pragma warning(pop)
 
-#define BUFFSIZE 1024
-#define LEN_NAME 6
-#define UNUSED(c) (c) = (c)
 #define is_valid_handle(x) (x != NULL && x != INVALID_HANDLE_VALUE)
-#define STR_IS_NUL(s) (s == NULL || *s == 0)
-
-typedef int(WINAPI *SHFileOperationWPtr)(LPSHFILEOPSTRUCTW lpFileOp);
-typedef BOOL(WINAPI *PathFileExistsWPtr)(LPCWSTR pszPath);
-typedef BOOL(WINAPI *PathAppendWPtr)(LPWSTR pszPath, LPCWSTR pszMore);
-typedef BOOL(WINAPI *PathRemoveFileSpecWPtr)(LPWSTR pszPath);
-static PathFileExistsWPtr fnPathFileExistsW;
-static PathAppendWPtr fnPathAppendW;
-static PathRemoveFileSpecWPtr fnPathRemoveFileSpecW;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -69,7 +57,7 @@ ExportCallback(_In_opt_ PVOID pContext, _In_ ULONG nOrdinal, _In_opt_ LPCSTR psz
     return TRUE;
 }
 
-BOOL
+static BOOL
 DoesDllExportOrdinal1(PCHAR pszDllPath)
 {
     HMODULE hDll = LoadLibraryExA(pszDllPath, NULL, DONT_RESOLVE_DLL_REFERENCES);
@@ -247,7 +235,99 @@ end:
 //////////////////////////////////////////////////////////////////////////////
 //
 
-int __stdcall
+static char *
+check_memstr(char *full_data, int full_data_len, const char *substr)
+{
+    if (full_data == NULL || full_data_len <= 0 || substr == NULL || *substr == '\0')
+    {
+        return NULL;
+    }
+    const int sublen = (const int)strlen(substr);
+    char *cur = full_data;
+    int last_possible = full_data_len - sublen + 1;
+    for (int i = 0; i < last_possible; i++)
+    {
+        if (*cur == *substr)
+        {
+            // assert(full_data_len - i >= sublen);
+            if (memcmp(cur, substr, sublen) == 0)
+            {
+                // found
+                return cur;
+            }
+        }
+        cur++;
+    }
+    return NULL;
+}
+
+static UINT64
+get_file_size(const HANDLE hfile)
+{  
+    UINT64 size = 0;
+    GetFileSizeEx(hfile, (LARGE_INTEGER *) &size);
+    return size;
+}
+
+static BOOL
+exist_key_desc(LPCWSTR pszPath, LPCSTR key)
+{
+    BOOL bGood = TRUE;
+    UINT64 size = 0;
+    DWORD bw = 0;
+    char *buff = NULL;
+    HANDLE hfile = INVALID_HANDLE_VALUE;
+    if (pszPath == NULL || pszPath[0] == 0)
+    {
+        return FALSE;
+    }
+    if (!key)
+    {
+        key = (LPCSTR)s_szDllPath;
+    }
+    if ((hfile = CreateFileW(pszPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE)
+    {
+        printf("Couldn't open input file: %ls, error: %lu\n", pszPath, GetLastError());
+        bGood = FALSE;
+        goto end_err;
+    }
+    if ((size = get_file_size(hfile)) < 0x20)
+    {
+        printf("So small\n");
+        bGood = FALSE;
+        goto end_err;
+    }
+    if ((buff = (char *)malloc((size_t)size)) == NULL)
+    {
+        bGood = FALSE;
+        goto end_err;
+    }
+    if (!ReadFile(hfile, buff, (DWORD)size, &bw, 0))
+    {
+        printf("ReadFile return false\n");
+        bGood = FALSE;
+        goto end_err;
+    }
+    if (check_memstr(buff, (int)bw, key) == NULL)
+    {
+        bGood = FALSE;
+    }
+end_err:
+    if (hfile != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hfile);
+    }
+    if (buff)
+    {
+        free(buff);
+    }
+    return bGood;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+
+static int
 get_file_bits(const wchar_t* path)
 {
     IMAGE_DOS_HEADER dos_header;
@@ -256,31 +336,31 @@ get_file_bits(const wchar_t* path)
     HANDLE	hFile = CreateFileW(path,GENERIC_READ,
                                 FILE_SHARE_READ,NULL,OPEN_EXISTING,
                                 FILE_ATTRIBUTE_NORMAL,NULL);
-    if( !is_valid_handle(hFile) )
+    if(!is_valid_handle(hFile))
     {
         return ret;
     }
     do
     {
         DWORD readed = 0;
-        DWORD m_ptr  = SetFilePointer( hFile,0,NULL,FILE_BEGIN );
-        if ( INVALID_SET_FILE_POINTER == m_ptr )
+        DWORD m_ptr  = SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+        if (INVALID_SET_FILE_POINTER == m_ptr)
         {
             break;
         }
-        ret = ReadFile( hFile,&dos_header,sizeof(IMAGE_DOS_HEADER),&readed,NULL );
-        if( ret && readed != sizeof(IMAGE_DOS_HEADER) && \
-            dos_header.e_magic != IMAGE_DOS_SIGNATURE )
+        ret = ReadFile(hFile, &dos_header, sizeof(IMAGE_DOS_HEADER), &readed, NULL);
+        if(ret && readed != sizeof(IMAGE_DOS_HEADER) && \
+           dos_header.e_magic != IMAGE_DOS_SIGNATURE)
         {
             break;
         }
-        m_ptr = SetFilePointer( hFile,dos_header.e_lfanew,NULL,FILE_BEGIN );
-        if ( INVALID_SET_FILE_POINTER == m_ptr )
+        m_ptr = SetFilePointer(hFile, dos_header.e_lfanew, NULL, FILE_BEGIN);
+        if (INVALID_SET_FILE_POINTER == m_ptr)
         {
             break;
         }
-        ret = ReadFile( hFile,&pe_header,sizeof(IMAGE_NT_HEADERS),&readed,NULL );
-        if( ret && readed != sizeof(IMAGE_NT_HEADERS) )
+        ret = ReadFile(hFile, &pe_header, sizeof(IMAGE_NT_HEADERS), &readed, NULL);
+        if(ret && readed != sizeof(IMAGE_NT_HEADERS))
         {
             break;
         }
@@ -455,14 +535,21 @@ wmain(int argc, WCHAR **argv)
             printf("Error: %hs does not export function with ordinal #1.\n", s_szDllPath);
             return 2;
         }
-        printf("Adding %hs to binary files.\n", s_szDllPath);
+        printf("Adding %hs to binary files?\n", s_szDllPath);
     }
 
     for (arg = 1; arg < argc; arg++)
     {
         if (argv[arg][0] != '-' && argv[arg][0] != '/')
         {
-            SetFile(argv[arg]);
+            if (!exist_key_desc(argv[arg], NULL))
+            {
+                SetFile(argv[arg]);
+            }
+            else
+            {
+                printf("Import table does not need to be fixed\n");
+            }
         }
     }
     return 0;
