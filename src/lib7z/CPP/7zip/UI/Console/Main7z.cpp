@@ -1693,6 +1693,12 @@ int Internal_Main2(int numArgs, WCHAR *args[])
     );
 
   ThrowException_if_Error(hresultMain);
+  
+#ifdef Z7_EXTERNAL_CODECS
+  // for __clang_major__ >= 23 : for "-Wlifetime-safety-dangling-global" warning suppression
+  // we clear global pointer to local _externalCodecs:
+  g_ExternalCodecs_Ptr = NULL;
+#endif
 
   return retCode;
 }

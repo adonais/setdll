@@ -3,7 +3,7 @@ ROOT = ..\..\..\..\..\..
 #######################/#######################################################
 
 ODEP=..\..\..\..\..\..\.dep
-CFLAGS = -nologo -c -O1 -Zi /Fd$(BIND)\7z.pdb -Fo$O\ -EHsc -Gy -GR- -GF $(CFLAGS)
+CFLAGS = -c -Zi /Fd$(BIND)\7z.pdb -Fo$O\ -EHsc -Gy -GR- -GF $(CFLAGS)
 O=$(ODEP)\lib7z
 LFLAGS = $(LDFLAGS) -nologo -OPT:REF -OPT:ICF
 PROGPATH = $(BIND)\$(PROG)

@@ -19,7 +19,7 @@ bool g_PathTrailReplaceMode =
     ;
 
 
-#ifdef _WIN32
+// #ifdef _WIN32
 static void ReplaceIncorrectChars(UString &s)
 {
   {
@@ -87,7 +87,7 @@ static void ReplaceIncorrectChars(UString &s)
     }
   }
 }
-#endif
+// #endif
 
 /* WinXP-64 doesn't support ':', '\\' and '/' symbols in name of alt stream.
    But colon in postfix ":$DATA" is allowed.
@@ -99,10 +99,13 @@ void Correct_AltStream_Name(UString &s)
   const unsigned kPostfixSize = 6;
   if (s.Len() >= kPostfixSize
       && StringsAreEqualNoCase_Ascii(s.RightPtr(kPostfixSize), ":$DATA"))
+  {
     len -= kPostfixSize;
+    s.DeleteFrom(len);
+  }
   for (unsigned i = 0; i < len; i++)
   {
-    wchar_t c = s[i];
+    const wchar_t c = s[i];
     if (c == ':' || c == '\\' || c == '/'
         || c == 0x202E // RLO
         )
@@ -167,10 +170,10 @@ static void Correct_PathPart(UString &s)
 
   if (s[0] == '.' && (s[1] == 0 || (s[1] == '.' && s[2] == 0)))
     s.Empty();
-  #ifdef _WIN32
+  // #ifdef _WIN32
   else
     ReplaceIncorrectChars(s);
-  #endif
+  // #endif
 }
 
 // static const char * const k_EmptyReplaceName = "[]";

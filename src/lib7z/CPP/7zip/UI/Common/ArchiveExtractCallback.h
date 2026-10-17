@@ -261,14 +261,6 @@ struct COwnerInfo
   COwnerInfo Group;
 #endif
 
-  void Clear()
-  {
-#ifndef _WIN32
-    Attrib_Defined = false;
-    Owner.Clear();
-#endif
-  }
-
     bool IsReparse() const
     {
       return (Attrib_Defined && (Attrib & FILE_ATTRIBUTE_REPARSE_POINT) != 0);
@@ -387,7 +379,8 @@ private:
   bool _is_SymLink_in_Data_Linux; // false = WIN32, true = LINUX.
       // _is_SymLink_in_Data_Linux is detected from Windows/Linux part of attributes of file.
   bool _needSetAttrib;
-  bool _isSymLinkCreated;
+  bool _dirAttrib_wasSet;
+  // bool _isSymLinkCreated;
   bool _itemFailure;
   bool _some_pathParts_wereRemoved;
 
@@ -395,6 +388,9 @@ private:
   bool _keepAndReplaceEmptyDirPrefixes; // replace them to "_";
 #if defined(_WIN32) && !defined(UNDER_CE) && !defined(Z7_SFX)
   bool _saclEnabled;
+#endif
+#ifndef _WIN32
+  bool _needSetOwner;
 #endif
 
   NExtract::NPathMode::EEnum _pathMode;
@@ -471,8 +467,11 @@ private:
 
   FString Hash_GetFullFilePath();
 
-  void SetAttrib() const;
-
+  void SetAttrib(const FString &path) const;
+#ifndef _WIN32
+  void SetOwner();
+#endif
+  
 public:
   HRESULT SendMessageError(const char *message, const FString &path) const;
   HRESULT SendMessageError_with_Error(HRESULT errorCode, const char *message, const FString &path) const;
@@ -614,7 +613,7 @@ struct CArchiveExtractCallback_Closer
 {
   CArchiveExtractCallback *_ref;
   
-  CArchiveExtractCallback_Closer(CArchiveExtractCallback *ref): _ref(ref) {}
+  CArchiveExtractCallback_Closer(CArchiveExtractCallback *ref Z7_lifetimebound): _ref(ref) {}
   
   HRESULT Close()
   {

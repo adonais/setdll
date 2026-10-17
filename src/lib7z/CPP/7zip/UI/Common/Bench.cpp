@@ -2866,6 +2866,8 @@ static void PrintPercents(IBenchPrintCallback &f, UInt64 val, UInt64 divider, un
 static void PrintChars(IBenchPrintCallback &f, char c, unsigned size)
 {
   char s[256];
+  if (size >= sizeof(s))
+    size = sizeof(s) - 1;
   memset(s, (Byte)c, size);
   s[size] = 0;
   f.Print(s);
@@ -3038,7 +3040,7 @@ AString GetProcessThreadsInfo(const NSystem::CProcessAffinity &ti)
     FOR_VECTOR (i, ti.Groups.GroupSizes)
     {
       if (i != 0)
-        s.Add_Char(' ');
+        s.Add_Space();
       s.Add_UInt32(ti.Groups.GroupSizes[i]);
     }
   }
@@ -3051,11 +3053,11 @@ AString GetProcessThreadsInfo(const NSystem::CProcessAffinity &ti)
 
 #ifdef _WIN32
 extern bool g_LargePagesMode;
+#endif
 extern "C"
 {
-  extern SIZE_T g_LargePageSize;
+  extern size_t g_LargePageSize;
 }
-#endif
 
 void Add_LargePages_String(AString &s)
 {
@@ -3070,10 +3072,14 @@ void Add_LargePages_String(AString &s)
     #endif
     if (!g_LargePagesMode)
       s += "-NA";
-    s += ")";
+    s.Add_Char(')');
   }
   #else
-    s += "";
+  if (g_LargePageSize != 0)
+  {
+    s.Add_OptSpaced(" (LP)");
+    // PrintSize_KMGT_Or_Hex(s, g_LargePageSize);
+  }
   #endif
 }
 
@@ -3773,10 +3779,11 @@ HRESULT Bench(
 
   #ifndef Z7_ST
 
-  if (threadsInfo.Get() && threadsInfo.GetNumProcessThreads() != 0)
-    numCPUs = threadsInfo.GetNumProcessThreads();
-  else
+  if (!threadsInfo.Get()
+      || (numCPUs = threadsInfo.GetNumProcessThreads()) == 0)
     numCPUs = NSystem::GetNumberOfProcessors();
+  // numCPUs : is number of threads assigned to process with affinity,
+  // or it's total number of threads in all groups, if IsGroupMode == true, and there is default affinity.
 
   #endif
 
@@ -4065,7 +4072,8 @@ HRESULT Bench(
           ));
         if (start >= freq * 16)
         {
-          printCallback->Print(" (Cmplx)");
+          if (printCallback)
+            printCallback->Print(" (Cmplx)");
           if (!freqCallback) // we don't want complexity change for old gui lzma benchmark
           {
             needSetComplexity = true;
@@ -4653,6 +4661,8 @@ HRESULT Bench(
     }
   }
  
+  if (!printCallback)
+    return E_NOTIMPL;
   IBenchPrintCallback &f = *printCallback;
 
   if (threadsPassIndex > 0)

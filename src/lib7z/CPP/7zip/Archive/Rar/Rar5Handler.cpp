@@ -8,6 +8,7 @@
 #include "../../../Common/ComTry.h"
 #include "../../../Common/IntToString.h"
 #include "../../../Common/MyBuffer2.h"
+#include "../../../Common/MyLinux.h"
 #include "../../../Common/UTFConvert.h"
 
 #include "../../../Windows/PropVariantUtils.h"
@@ -1184,7 +1185,15 @@ HRESULT CUnpacker::Code(const CItem &item, const CItem &lastItem, UInt64 packSiz
 
   const UInt64 processedSize = outStream->GetPos();
   if (res == S_OK && !lastItem.Is_UnknownSize() && processedSize != lastItem.Size)
-    res = S_FALSE;
+  {
+    // rar_v7.13-: linux archive contains symLink with (packSize == 0 && lastItem.Size != 0)
+    // v25.02: we ignore such record in rar headers:
+    if (packSize != 0
+        || method != 0
+        || lastItem.HostOS != kHost_Unix
+        || !MY_LIN_S_ISLNK(lastItem.Attrib))
+      res = S_FALSE;
+  }
 
   // if (res == S_OK)
   {
@@ -1404,7 +1413,7 @@ UInt64 CHandler::GetPackSize(unsigned refIndex) const
   }
 }
 
-static char *PrintDictSize(char *s, UInt64 w)
+static char *PrintDictSize(char *s Z7_lifetimebound, UInt64 w)
 {
   char                               c = 'K'; w >>= 10;
   if ((w & ((1 << 10) - 1)) == 0)  { c = 'M'; w >>= 10;
@@ -1664,7 +1673,7 @@ Z7_COM7F_IMF(CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value))
     case kpidExtension:
       if (_arcs.Size() == 1)
       {
-        if (arcInfo->IsVolume())
+        if (arcInfo && arcInfo->IsVolume())
         {
           AString s ("part");
           UInt32 v = (UInt32)arcInfo->GetVolIndex() + 1;
@@ -1800,14 +1809,14 @@ static void TimeRecordToProp(const CItem &item, unsigned stampIndex, NCOM::CProp
     size -= num;
   }
 
-  if ((flags & (NTimeRecord::NFlags::kMTime << stampIndex)) == 0)
+  if (((UInt32)flags & (NTimeRecord::NFlags::kMTime << stampIndex)) == 0)
     return;
   
   unsigned numStamps = 0;
   unsigned curStamp = 0;
 
   for (unsigned i = 0; i < 3; i++)
-    if ((flags & (NTimeRecord::NFlags::kMTime << i)) != 0)
+    if (((UInt32)flags & (NTimeRecord::NFlags::kMTime << i)) != 0)
     {
       if (i == stampIndex)
         curStamp = numStamps;

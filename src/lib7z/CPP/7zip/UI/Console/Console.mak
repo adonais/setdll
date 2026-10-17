@@ -41,3 +41,5 @@ UI_COMMON_OBJS = \
 
 C_OBJS = $(C_OBJS) \
   $O\DllSecur.obj \
+
+# we need empty line after last line above
