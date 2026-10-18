@@ -22,7 +22,9 @@
 #include <shlwapi.h>
 #include <shellapi.h>
 #include <detours.h>
+#ifdef _7ZIP
 #include "7zc.h"
+#endif
 #pragma warning(push)
 #if _MSC_VER > 1400
 #pragma warning(disable : 6102 6103) // /analyze warnings
@@ -393,13 +395,20 @@ PrintUsage(void)
         "    /r                   : Remove extra DLLs from binary files\n"
         "    /t:file.exe          : Test PE file bits\n"
         "    /?                   : This help screen\n"
-        "    -7 --help            : 7z command help screen\n";
+    #ifdef _7ZIP
+        "    -7 --help            : 7z command help screen\n"
+    #endif
+        ;
     char path[N_SIZE] = {0};
     int len = (int)strlen(k_help)+N_SIZE;
     char *s_help = (char*)calloc(len, sizeof(char));
-    if (s_help  && get_process_name(path, N_SIZE))
+    if (s_help
+    #ifdef _7ZIP
+        && get_process_name(path, N_SIZE)
+    #endif
+       )
     {
-        sprintf_s(s_help, len, k_help, path);
+        sprintf_s(s_help, len, k_help, path[0] ? path : "setdll");
         printf("%s", s_help);
 		free(s_help);
     }
@@ -489,12 +498,13 @@ wmain(int argc, WCHAR **argv)
                     s_fRemove = TRUE;
                     fNeedZip = FALSE;
                     break;
+            #ifdef _7ZIP
                 case '7':
                 {
                     return exec_zmain2(argc, argv);
                 }
                 break;
-
+            #endif
                 case '?': // Help
                     fNeedHelp = TRUE;
                     fNeedZip = FALSE;
@@ -505,10 +515,12 @@ wmain(int argc, WCHAR **argv)
                     break;
             }
         }
+    #ifdef _7ZIP
         else if (fNeedZip)
         {
             return exec_zmain2(argc, argv);
         }
+    #endif
     }
     if (argc == 1)
     {

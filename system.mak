@@ -130,9 +130,9 @@ CFLAGS=$(CFLAGS) -D_$(DETOURS_TARGET_PROCESSOR:X64=AMD64)_ # redundant with wind
 !ENDIF
 
 !IF "$(APP_DEBUG)" == "1"
-CFLAGS = $(CFLAGS) -Od -utf-8
+CFLAGS = -nologo $(CFLAGS) -Od -utf-8
 !ELSE
-CFLAGS = $(CFLAGS) -O1 -utf-8
+CFLAGS = -nologo $(CFLAGS) -O1 -utf-8
 !ENDIF
 
 !IF "$(MD)" == "1"

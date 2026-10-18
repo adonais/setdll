@@ -5,7 +5,9 @@ ROOT = .
 
 all:
     cd "$(MAKEDIR)"
+!IF "$(7ZIP)" == "1"
 	@if exist "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
+!ENDIF
 	@if exist "$(MAKEDIR)\src\detours\makefile" cd "$(MAKEDIR)\src\detours" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS)

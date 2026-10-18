@@ -8,10 +8,15 @@ ROOT=..
 AFLAGS=-nologo -Zi -c -Fl
 CFLAGS=$(CLIB) -W4 -WX $(CFLAGS) -Zi -Fd$(BIND)\setdll$(BITS).pdb
 LDFLAGS = -nologo -incremental:no -nodefaultlib:oldnames.lib $(LDFLAGS)
-LIBS=$(LIBS) kernel32.lib oleaut32.lib user32.lib advapi32.lib oleaut32.lib ole32.lib
+LIBS=$(LIBS) kernel32.lib oleaut32.lib user32.lib advapi32.lib oleaut32.lib ole32.lib $(BIND)\detours.lib
 
-DEPS = $(BIND)\detours.lib $(BIND)\7z.lib
-LIBS = $(BIND)\detours.lib -WHOLEARCHIVE:$(BIND)\7z.lib $(LIBS)
+DEPS = $(BIND)\detours.lib
+
+!IF "$(7ZIP)" == "1"
+CFLAGS = $(CFLAGS) -D_7ZIP
+DEPS = $(DEPS) $(BIND)\7z.lib
+LIBS = -WHOLEARCHIVE:$(BIND)\7z.lib $(LIBS)
+!ENDIF
 
 .cpp{$(OBJD)}.obj:
     $(CC) $(CFLAGS) -Fo$(OBJD)\ -c $<
