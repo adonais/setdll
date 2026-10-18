@@ -425,6 +425,7 @@ wmain(int argc, WCHAR **argv)
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
     int arg = 1;
+    int ret = 0;
     for (; arg < argc; arg++)
     {
         if (argv[arg][0] == '-' || argv[arg][0] == '/')
@@ -479,16 +480,16 @@ wmain(int argc, WCHAR **argv)
                     }
                     if (strlen(s_szDllPath) > 1)
                     {
-                        int bits = get_file_bits(w_szDllPath);
-                        if (bits == 32)
+                        ret = get_file_bits(w_szDllPath);
+                        if (ret == 32)
                         {
                             printf("PE32 executable (i386), for MS Windows\n");
                         }
-                        else if (bits == 64)
+                        else if (ret == 64)
                         {
                             printf("PE32+ executable (x86-64), for MS Windows\n");
                         }
-                        return bits;
+                        return ret;
                     }
                     fNeedZip = FALSE;
                     break;
@@ -533,12 +534,11 @@ wmain(int argc, WCHAR **argv)
     if (fNeedHelp)
     {
         PrintUsage();
-        return 1;
+        return ret;
     }
-
     if (s_fRemove)
     {
-        printf("Removing extra DLLs from binary files.\n");
+        printf("Removing extra DLLs from binary files\n");
     }
     else
     {
@@ -547,16 +547,15 @@ wmain(int argc, WCHAR **argv)
             printf("Error: %hs does not export function with ordinal #1.\n", s_szDllPath);
             return 2;
         }
-        printf("Adding %hs to binary files?\n", s_szDllPath);
+        printf("Adding %hs to binary files\n", s_szDllPath);
     }
-
     for (arg = 1; arg < argc; arg++)
     {
         if (argv[arg][0] != '-' && argv[arg][0] != '/')
         {
-            if (!exist_key_desc(argv[arg], NULL))
+            if (s_fRemove || !exist_key_desc(argv[arg], NULL))
             {
-                SetFile(argv[arg]);
+                ret = SetFile(argv[arg]) ? 0 : 1;
             }
             else
             {
@@ -564,7 +563,7 @@ wmain(int argc, WCHAR **argv)
             }
         }
     }
-    return 0;
+    return ret;
 }
 
 // End of File
