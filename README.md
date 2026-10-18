@@ -12,7 +12,7 @@ nmake
 or
 
 nmake CC=clang-cl clean  
-nmake CC=clang-cl 
+nmake CC=clang-cl 7ZIP=1 MD=1  
 
 ## About setdll
 
