@@ -22,6 +22,7 @@
 #include <shlwapi.h>
 #include <shellapi.h>
 #include <detours.h>
+#include "pakfile.h"
 #ifdef _7ZIP
 #include "7zc.h"
 #endif
@@ -38,42 +39,6 @@
 //
 static BOOLEAN s_fRemove = FALSE;
 static CHAR s_szDllPath[MAX_PATH] = {0};
-
-//////////////////////////////////////////////////////////////////////////////
-//
-//  This code verifies that the named DLL has been configured correctly
-//  to be imported into the target process.  DLLs must export a function with
-//  ordinal #1 so that the import table touch-up magic works.
-//
-static BOOL CALLBACK
-ExportCallback(_In_opt_ PVOID pContext, _In_ ULONG nOrdinal, _In_opt_ LPCSTR pszName, _In_opt_ PVOID pCode)
-{
-    (void) pContext;
-    (void) pCode;
-    (void) pszName;
-
-    if (nOrdinal == 1)
-    {
-        *((BOOL *) pContext) = TRUE;
-    }
-    return TRUE;
-}
-
-static BOOL
-DoesDllExportOrdinal1(PCHAR pszDllPath)
-{
-    HMODULE hDll = LoadLibraryExA(pszDllPath, NULL, DONT_RESOLVE_DLL_REFERENCES);
-    if (hDll == NULL)
-    {
-        printf("setdll.exe: LoadLibraryEx(%s) failed with error %lu.\n", pszDllPath, GetLastError());
-        return FALSE;
-    }
-
-    BOOL validFlag = FALSE;
-    DetourEnumerateExports(hDll, &validFlag, ExportCallback);
-    FreeLibrary(hDll);
-    return validFlag;
-}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -393,6 +358,9 @@ PrintUsage(void)
         "Options:\n"
         "    /d:file.dll          : Add file.dll binary files\n"
         "    /r                   : Remove extra DLLs from binary files\n"
+    #ifdef _GZIP
+        "    /p:resources.pak     : Modify resources.pak file to block chrome/edge update error message\n"
+    #endif
         "    /t:file.exe          : Test PE file bits\n"
         "    /?                   : This help screen\n"
     #ifdef _7ZIP
@@ -421,7 +389,7 @@ int CDECL
 wmain(int argc, WCHAR **argv)
 {
     BOOL fNeedHelp = FALSE;
-    BOOL fNeedZip  = TRUE;
+    [[maybe_unused]] BOOL fNeedZip  = TRUE;
     LPWSTR pszFilePart = NULL;
     WCHAR w_szDllPath[MAX_PATH] = { 0 };
     int arg = 1;
@@ -458,7 +426,28 @@ wmain(int argc, WCHAR **argv)
                     }
                     fNeedZip = FALSE;
                     break;
-
+            #ifdef _GZIP
+                case 'p': // Fixed resources.pak
+                case 'P':
+		            if (wcslen(argp) < 2)
+		            {
+		                fNeedHelp = TRUE;
+		                break;
+		            }                	
+                    if (argp[1] != ':' && GetFullPathNameW(argp, MAX_PATH, w_szDllPath, &pszFilePart))
+                    {
+                        // MessageBoxW(NULL, w_szDllPath, L"w_sz:", 0);
+                    }
+                    else
+                    {
+                        StringCchPrintfW(w_szDllPath, MAX_PATH, L"%s", argp);
+                    }
+                    if (!WideCharToMultiByte(CP_ACP, 0, w_szDllPath, -1, s_szDllPath, sizeof(s_szDllPath), NULL, NULL))
+                    {
+                        s_szDllPath[0] = 0;
+                    }
+                    return doBinareFile(s_szDllPath);
+            #endif
                 case 't': // get PE file bits
                 case 'T':
 		            if (wcslen(argp) < 2)
@@ -489,11 +478,8 @@ wmain(int argc, WCHAR **argv)
                         {
                             printf("PE32+ executable (x86-64), for MS Windows\n");
                         }
-                        return ret;
                     }
-                    fNeedZip = FALSE;
-                    break;
-
+                    return ret;
                 case 'r': // Remove extra set DLLs.
                 case 'R':
                     s_fRemove = TRUE;
@@ -506,13 +492,9 @@ wmain(int argc, WCHAR **argv)
                 }
                 break;
             #endif
-                case '?': // Help
+                default: // Help
                     fNeedHelp = TRUE;
                     fNeedZip = FALSE;
-                    break;
-
-                default:
-                    fNeedZip = TRUE;
                     break;
             }
         }
@@ -542,12 +524,7 @@ wmain(int argc, WCHAR **argv)
     }
     else
     {
-        if (!DoesDllExportOrdinal1(s_szDllPath))
-        {
-            printf("Error: %hs does not export function with ordinal #1.\n", s_szDllPath);
-            return 2;
-        }
-        printf("Adding %hs to binary files\n", s_szDllPath);
+        printf("Adding %s to binary files\n", s_szDllPath);
     }
     for (arg = 1; arg < argc; arg++)
     {

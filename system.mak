@@ -141,8 +141,8 @@ CFLAGS = $(CFLAGS) -MD
 
 !IF "$(CC)" == "cl"
 AR   = lib -nologo 
-LD   = link -nologo -release
-CFLAGS = $(CFLAGS) -Gm- -W4 -WX
+LD   = link -nologo -release -LTCG
+CFLAGS = $(CFLAGS) -Gm- -W4 -WX -GL
 COMPILER_MSVC=1
 !ELSEIF "$(CC)" == "clang-cl"
 ##  -llvmlibthin
@@ -150,7 +150,7 @@ AR   = llvm-lib -nologo
 LD   = lld-link -nologo
 CFLAGS   = -flto=thin $(CFLAGS) -Wno-unused-variable -Wno-unused-function \
            -Wno-implicit-int-float-conversion -Wno-incompatible-pointer-types \
-           -D_CRT_SECURE_NO_WARNINGS
+           -Wno-c++11-narrowing -D_CRT_SECURE_NO_WARNINGS
 COMPILER_CLANG=1
 !IF "$(BITS)" == "32"
 CFLAGS   = --target=i686-pc-windows-msvc $(CFLAGS) 

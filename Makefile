@@ -9,6 +9,9 @@ all:
 	@if exist "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
 !ENDIF
 	@if exist "$(MAKEDIR)\src\detours\makefile" cd "$(MAKEDIR)\src\detours" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
+!IF "$(GZIP)" == "1"
+	@if exist "$(MAKEDIR)\src\gzip\makefile" cd "$(MAKEDIR)\src\gzip" && $(MAKE) /NOLOGO /$(MAKEFLAGS)
+!ENDIF
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS)
     cd "$(MAKEDIR)"
@@ -17,6 +20,7 @@ clean:
     cd "$(MAKEDIR)"
 	@if exist "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" cd "$(MAKEDIR)\src\lib7z\CPP\7zip\Bundles\Alone" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
 	@if exist "$(MAKEDIR)\src\detours\makefile" cd "$(MAKEDIR)\src\detours" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
+	@if exist "$(MAKEDIR)\src\gzip\makefile" cd "$(MAKEDIR)\src\gzip" && $(MAKE) /NOLOGO /$(MAKEFLAGS) clean
     cd "$(MAKEDIR)\src"
     @$(MAKE) /NOLOGO /$(MAKEFLAGS) clean
     cd "$(MAKEDIR)"
