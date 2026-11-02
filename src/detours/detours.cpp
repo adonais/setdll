@@ -1714,7 +1714,7 @@ static BOOL detour_is_region_empty(PDETOUR_REGION pRegion)
 
     // Stop if any of the trampolines aren't free.
     PDETOUR_TRAMPOLINE pTrampoline = ((PDETOUR_TRAMPOLINE)pRegion) + 1;
-    for (int i = 0; i < (int)DETOUR_TRAMPOLINES_PER_REGION; i++) {
+    for (int i = 0; (const unsigned long)i < DETOUR_TRAMPOLINES_PER_REGION; i++) {
         if (pTrampoline[i].pbRemain != NULL &&
             (pTrampoline[i].pbRemain < pbRegionBeg ||
              pTrampoline[i].pbRemain >= pbRegionLim)) {
@@ -1943,7 +1943,7 @@ LONG WINAPI DetourTransactionCommit()
 
 static BYTE detour_align_from_trampoline(PDETOUR_TRAMPOLINE pTrampoline, BYTE obTrampoline)
 {
-    for (LONG n = 0; n < (LONG)ARRAYSIZE(pTrampoline->rAlign); n++) {
+    for (uintptr_t n = 0; n < ARRAYSIZE(pTrampoline->rAlign); n++) {
         if (pTrampoline->rAlign[n].obTrampoline == obTrampoline) {
             return pTrampoline->rAlign[n].obTarget;
         }
@@ -1953,7 +1953,7 @@ static BYTE detour_align_from_trampoline(PDETOUR_TRAMPOLINE pTrampoline, BYTE ob
 
 static LONG detour_align_from_target(PDETOUR_TRAMPOLINE pTrampoline, LONG obTarget)
 {
-    for (LONG n = 0; n < (LONG)ARRAYSIZE(pTrampoline->rAlign); n++) {
+    for (uintptr_t n = 0; n < ARRAYSIZE(pTrampoline->rAlign); n++) {
         if (pTrampoline->rAlign[n].obTarget == obTarget) {
             return pTrampoline->rAlign[n].obTrampoline;
         }
@@ -2803,9 +2803,9 @@ LONG WINAPI DetourDetach(_Inout_ PVOID *ppPointer,
 
     ////////////////////////////////////// Verify that Trampoline is in place.
     //
-    LONG cbTarget = pTrampoline->cbRestore;
+    uintptr_t cbTarget = pTrampoline->cbRestore;
     PBYTE pbTarget = pTrampoline->pbRemain - cbTarget;
-    if (cbTarget == 0 || cbTarget > (LONG)sizeof(pTrampoline->rbCode)) {
+    if (cbTarget == 0 || cbTarget > sizeof(pTrampoline->rbCode)) {
         error = ERROR_INVALID_BLOCK;
         if (s_fIgnoreTooSmall) {
             goto stop;

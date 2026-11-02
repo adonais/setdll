@@ -11,7 +11,7 @@ ROOT = ..\..
 !include "$(ROOT)\system.mak"
 #######################/#######################################################
 ##
-CFLAGS=-W4 -WX -Gy $(CFLAGS) -Zi -Fd$(BIND)\detours.pdb -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR -std:c++17
+CFLAGS=-W4 -WX -Gy $(CFLAGS) -Zi -Fd$(BIND)\detours.pdb -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR -std:c++latest
 
 OBJS = \
     $(OBJD)\detours.obj     \
